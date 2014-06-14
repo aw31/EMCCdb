@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "navbar.html" %}
+
+  <div class="page-header"><h1>Submit Problem</h1></div>
+  <div class="panel panel-default" style="max-width: 500px">
+    <div class="panel-heading">
+      <h3 class="panel-title">Preview</h3>
+    </div>
+    <div class="panel-body" id="preview"></div>
+  </div>
+  <form method="post" action="/submit" class="form" style="max-width: 500px; margin-bottom: 30px">
+    <div class="form-group">
+      <label>Problem</label> <small>You can use $\LaTeX$ to type up your problem!</small>
+      <textarea class="form-control" name="problem" rows="5" id="problem"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Answer</label>
+      <input type="text" class="form-control" name="answer">
+    </div>
+    <div class="form-group">
+      <label>Difficulty</label> <small>What percentage of participants will solve this?</small>
+      <select class="form-control" name="difficulty">
+        <option value="" selected="selected">---------</option>
+        <option value="100%">100%</option>
+        <option value="75%">75%</option>
+        <option value="50%">50%</option>
+        <option value="25%">25%</option>
+        <option value="5%">5%</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tags</label> <small>A space separated list of tags. For example: "alg ari com nt geo".</small>
+      <input type="text" class="form-control" name="tags">
+    </div>
+    <input type="submit" class="btn btn-primary pull-right" value="Submit">
+    <button type="button" onclick="update()" class="btn btn-secondary pull-right" style="margin-right: 5px">Preview</button>
+  </form>
+{% endblock %}
+
+{% block end %}
+  <script src="static/latex_to_HTML.js"></script>
+
+  // updates preview
+  <script>
+    function update(){
+      preview = document.getElementById("preview");
+      val = document.getElementById("problem").value;
+      val = latex_to_HTML(val);
+      preview.innerHTML = val;
+      MathJax.Hub.Queue(
+        ["Typeset", MathJax.Hub, preview]
+      );
+    }
+  </script>
+{% endblock %}

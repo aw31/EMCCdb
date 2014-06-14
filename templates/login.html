@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="navbar navbar-default" role="navigation">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">EMCC Database</a>
+      </div>
+      <div class="collapse navbar-collapse">
+        <ul class="nav navbar-nav pull-right">
+          <li class="active"><a href="#">Login</a></li>
+        </ul>
+      </div><!--/.nav-collapse -->
+    </div>
+  </div>
+
+  <div class="page-header"><h1>Login</h1></div>
+  <style>
+    .form-control {
+      margin-bottom: 5px;
+    }
+  </style>
+  <form method="post" action="/login" class="form" style="max-width: 300px; margin-bottom: 30px">
+    <p>Use your Exeter username and password.</p>
+    <input autofocus="" class="form-control" maxlength="254" name="username" placeholder="Username" required="" type="text" />
+    <input class="form-control" maxlength="4096" name="password" placeholder="Password" required="" type="password" />
+    <input type="submit" class="btn btn-primary btn-block" value="Sign in">
+  </form>
+{% endblock %}

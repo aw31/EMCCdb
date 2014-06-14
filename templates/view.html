@@ -61,7 +61,7 @@
           <td>
             <button class="btn btn-xs btn-primary" onclick="toggle($( this ).html())">&zwnj;{{ problem.author }}&zwnj;</button>
           </td>
-          <td>{{ problem.date }}</td>
+          <td>{{ problem.date }} <span hidden> {{ problem.date.second }} {{ problem.date.microsecond }} </span></td>
           <td>{{ problem.comments }}</td>
         </tr>
       {% endfor %}

@@ -15,7 +15,7 @@ function getCookie(key) {
 var filtered = {};
 
 // redraws datatable with rows that contain elements of filtered
-function filter(search = true){
+function filter(search){
   table = $('#problems').DataTable();
   var str = '';
   $( '#filtered' ).empty();
@@ -30,12 +30,12 @@ function filter(search = true){
 // add/delete/toggles tag from filtered
 function add(tag){
   filtered[tag] = true;
-  filter();
+  filter(true);
 }
 
 function del(tag){
   delete filtered[tag];
-  filter();
+  filter(true);
 }
 
 function toggle(tag){
@@ -65,15 +65,26 @@ $(document).ready(function(){
     function conv(x){
       split = x.split(" ");
       time = split[3];
-      time_split = time.split(":");
+      if(time.indexOf(":") != -1){
+        time_split = time.split(":");
+      } else {
+        time_split = [time, "00"]
+      }
       time_split[0] = (parseInt(time_split[0]) % 12);
-      if(x.slice(-4, -3) == "p") time_split[0] += 12;
+      if(split[4] == "p.m.") time_split[0] += 12;
       time = time_split[0] + ":" + time_split[1];
       x = split[0] + " " + split[1] + " " + split[2] + " " + time;
       return x;
     }
+    function getMicroseconds(x){
+      split = x.split(" ");
+      return 1000000 * split[7] + parseInt(split[8]);
+    }
     x_date = Date.parse(conv(x));
     y_date = Date.parse(conv(y));
+    if(x_date == y_date){
+      return getMicroseconds(y) - getMicroseconds(x);
+    }
     return y_date - x_date;
   };
   jQuery.fn.dataTableExt.oSort["datetime-asc"] = function(x, y){
@@ -137,8 +148,7 @@ $(document).ready(function(){
       $( '#problems_filter' ).children().children().val('');
       filter(false);
     },
-    'iDisplayLength': 50,
-    'order': [[ 4, 'desc' ]]
+    'iDisplayLength': 25
   });
 
 });

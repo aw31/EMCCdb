@@ -179,7 +179,6 @@ class PdfHandler(auth.BaseHandler):
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write("Sorry, only problem committee members can view submitted problems.")
 
-
 # Main page (contains problem submission)
 class MainPage(auth.BaseHandler):
     @user_required

@@ -1,9 +1,21 @@
+// yummy cookie setting/getting (from http://stackoverflow.com/a/18652401/3376090)
+function setCookie(key, value) {
+  var expires = new Date();
+  expires.setTime(expires.getTime() + (1 * 24 * 60 * 60 * 1000));
+  document.cookie = key + '=' + value + ';expires=' + expires.toUTCString();
+}
+
+function getCookie(key) {
+  var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
+  return keyValue ? keyValue[2] : null;
+}
+
 // manages filtering of tags in datatable
 // set of filtered tags
 var filtered = {};
 
 // redraws datatable with rows that contain elements of filtered
-function filter(){
+function filter(search = true){
   table = $('#problems').DataTable();
   var str = '';
   $( '#filtered' ).empty();
@@ -12,7 +24,7 @@ function filter(){
     button = '<button class="btn btn-xs btn-primary" style="margin: 10px 2px 10px 8px" onclick="toggle($( this ).html())">'
       $( '#filtered' ).append(button + v + '</button>');
   }
-  table.search(str).draw();
+  if(search) table.search(str).draw();
 }
 
 // add/delete/toggles tag from filtered
@@ -82,34 +94,53 @@ $(document).ready(function(){
     return jQuery.fn.dataTableExt.oSort["difficulty-desc"](y, x);
   }
 
-  // sets up datatable
-  table = document.getElementById("problems");
-  $( '#problems' ).dataTable({
-    fnDrawCallback: function() {
-      MathJax.Hub.Queue(function(){MathJax.Hub.Typeset();})
-    },
-    "aoColumnDefs": [
-  {
-    "bSortable": true,
-    "sType": "difficulty",
-    "aTargets": [1]
-  }, {
-    "bSortable": true,
-    "sType": "datetime",
-    "aTargets": [4]
-  }, {
-    "sWidth": "40%",
-    "aTargets": [0]
-  }, {
-    "sWidth": "30%",
-    "aTargets": [5]
+  var tags = getCookie('tags');
+  if(tags != null){
+    tags = tags.split(' ');
+    for(var i = 0; i < tags.length; i++){
+      if(tags[i].length == 0) continue;
+      filtered[tags[i]] = true;
+    }
   }
 
-  ],
-    "order": [[ 4, "desc" ]],
-    "iDisplayLength": 50,
-    "dom": '<fi<t>lp>'
+  // sets up datatable
+  table = document.getElementById('problems');
+  $( '#problems' ).dataTable({
+    'aoColumnDefs': [
+      {
+        'bSortable': true,
+        'sType': 'difficulty',
+        'aTargets': [1]
+      }, {
+        'bSortable': true,
+        'sType': 'datetime',
+        'aTargets': [4]
+      }, {
+        'sWidth': '40%',
+        'aTargets': [0]
+      }, {
+        'sWidth': '30%',
+        'aTargets': [5]
+      }
+    ],
+    'bStateSave': true,
+    'dom': '<fi<t>lp>',
+    'fnDrawCallback': function() {
+      MathJax.Hub.Queue(function(){MathJax.Hub.Typeset();});
+      var tags = '';
+      for(var v in filtered){
+        tags += v + ' ';
+      }
+      setCookie('tags', tags);
+    },
+    'fnInitComplete': function() {
+      $( '#problems_filter' ).children().children().val('');
+      filter(false);
+    },
+    'iDisplayLength': 50,
+    'order': [[ 4, 'desc' ]]
   });
+
 });
 
 // get datatable to resize with window

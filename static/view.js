@@ -14,17 +14,25 @@ function getCookie(key) {
 // set of filtered tags
 var filtered = {};
 
-// redraws datatable with rows that contain elements of filtered
-function filter(search){
-  table = $('#problems').DataTable();
+function get_filtered(){
   var str = '';
-  $( '#filtered' ).empty();
   for(var v in filtered){
     str += v + ' ';
-    button = '<button class="btn btn-xs btn-primary" style="margin: 10px 2px 10px 8px" onclick="toggle($( this ).html())">'
-      $( '#filtered' ).append(button + v + '</button>');
   }
-  if(search) table.search(str).draw();
+  return str;
+}
+
+// redraws datatable with rows that contain elements of filtered
+function filter(search){
+  var button = '<button class="btn btn-xs btn-primary" style="margin: 10px 2px 10px 8px" onclick="toggle($( this ).html())">';
+  $( '#filtered' ).empty();
+  for(var v in filtered){
+    $( '#filtered' ).append(button + v + '</button>');
+  }
+  if(search){
+    $( '#problems_filter' ).children().children().val('');
+    $( '#problems' ).DataTable().search(get_filtered()).draw();
+  }
 }
 
 // add/delete/toggles tag from filtered
@@ -48,87 +56,64 @@ function toggle(tag){
 
 $(document).ready(function(){
   // converts stuff like \emph{blah} to html
-  $('.problem').each(function(){
+  $( '.problem' ).each(function(){
     $( this ).html(latex_to_HTML($( this ).html()));
   });
 
   // allows answer to be shown when hovering
-  $('.answer').each(function(){
-    $(this).hover(
-      function(){ $( this ).children().toggle()},
-      function(){ $( this ).children().toggle()}
+  $( '.answer' ).each(function(){
+    $( this ).hover(
+      function(){ $( this ).children().toggle(); },
+      function(){ $( this ).children().toggle(); }
     );
   });
 
-  // compares dates of form "June 13, 2014, 2:52 p.m."
-  jQuery.fn.dataTableExt.oSort["datetime-desc"] = function(x, y){
-    function conv(x){
-      split = x.split(" ");
-      time = split[3];
-      if(time.indexOf(":") != -1){
-        time_split = time.split(":");
-      } else {
-        time_split = [time, "00"]
-      }
-      time_split[0] = (parseInt(time_split[0]) % 12);
-      if(split[4] == "p.m.") time_split[0] += 12;
-      time = time_split[0] + ":" + time_split[1];
-      x = split[0] + " " + split[1] + " " + split[2] + " " + time;
-      return x;
-    }
-    function getMicroseconds(x){
-      split = x.split(" ");
-      return 1000000 * split[7] + parseInt(split[8]);
-    }
-    x_date = Date.parse(conv(x));
-    y_date = Date.parse(conv(y));
-    if(x_date == y_date){
-      return getMicroseconds(y) - getMicroseconds(x);
-    }
-    return y_date - x_date;
-  };
-  jQuery.fn.dataTableExt.oSort["datetime-asc"] = function(x, y){
-    return jQuery.fn.dataTableExt.oSort["datetime-desc"](y, x);
-  }
-
   // compares difficulties of form "<button>75%</button>"
-  jQuery.fn.dataTableExt.oSort["difficulty-desc"] = function(x, y){
-    function val(x){
+  jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+    "difficulty-pre": function(x){
       x = x.slice(x.indexOf('>') + 2);
       x = x.slice(0, x.indexOf('<'));
       if(x.slice(-2, -1) == "%") return parseInt(x.slice(0, -2));
       return 0;
-    }
-    return val(y) - val(x);
-  };
-  jQuery.fn.dataTableExt.oSort["difficulty-asc"] = function(x, y){
-    return jQuery.fn.dataTableExt.oSort["difficulty-desc"](y, x);
-  }
+    }, 
+    "difficulty-desc": function(x, y){ return y - x; }, 
+    "difficulty-asc": function(x, y){ return x - y; }
+  });
+
+  // compares IDs of form "<a href=blah>#12</a>"
+  jQuery.extend( jQuery.fn.dataTableExt.oSort, {
+    "id-pre": function(x){
+      x = x.slice(x.indexOf('#') + 1);
+      x = x.slice(0, x.indexOf('<'));
+      return parseInt(x);
+    }, 
+    "id-desc": function(x, y){ return y - x; }, 
+    "id-asc": function(x, y){ return x - y; }
+  });
 
   var tags = getCookie('tags');
-  if(tags != null){
+  if(tags !== null){
     tags = tags.split(' ');
     for(var i = 0; i < tags.length; i++){
-      if(tags[i].length == 0) continue;
+      if(tags[i].length === 0) continue;
       filtered[tags[i]] = true;
     }
   }
 
   // sets up datatable
-  table = document.getElementById('problems');
   $( '#problems' ).dataTable({
     'aoColumnDefs': [
       {
         'bSortable': true,
-        'sType': 'difficulty',
-        'aTargets': [1]
+        'sType': 'id',
+        'aTargets': [0]
       }, {
         'bSortable': true,
-        'sType': 'datetime',
-        'aTargets': [4]
+        'sType': 'difficulty',
+        'aTargets': [2]
       }, {
         'sWidth': '40%',
-        'aTargets': [0]
+        'aTargets': [1]
       }, {
         'sWidth': '30%',
         'aTargets': [5]
@@ -138,15 +123,17 @@ $(document).ready(function(){
     'dom': '<fi<t>lp>',
     'fnDrawCallback': function() {
       MathJax.Hub.Queue(function(){MathJax.Hub.Typeset();});
-      var tags = '';
-      for(var v in filtered){
-        tags += v + ' ';
-      }
-      setCookie('tags', tags);
+      setCookie('tags', get_filtered());
     },
     'fnInitComplete': function() {
-      $( '#problems_filter' ).children().children().val('');
+      $( '#problems_filter' ).children().children().keyup(function(){
+        filtered = {};
+        $( '#filtered' ).empty();
+      });
       filter(false);
+      if(get_filtered() !== ''){
+        $( '#problems_filter' ).children().children().val('');
+      }
     },
     'iDisplayLength': 25
   });
@@ -154,7 +141,7 @@ $(document).ready(function(){
 });
 
 // get datatable to resize with window
-$(window).bind('resize', function(){
-  $('#problems').css('width', '100%');
+$( window ).bind('resize', function(){
+  $( '#problems' ).css('width', '100%');
 });
 

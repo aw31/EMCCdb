@@ -54,7 +54,7 @@ class ViewHandler(auth.BaseHandler):
     def get(self):
         user_id = self.user_info()['user_id']
         if problem_committee(user_id):
-            problems = Problem.query().order(-Problem.date)
+            problems = Problem.query().order(Problem.date)
             self.response.out.write(template.render('templates/view.html', {'problems': problems, 'problem_committee': True}))
         else:
             self.response.out.write(template.render('templates/view.html', {'problem_committee': False}))

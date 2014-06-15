@@ -45,10 +45,9 @@
   <!-- updates preview -->
   <script>
     function update(){
-      preview = document.getElementById("preview");
-      val = document.getElementById("problem").value;
+      var val = $( "#problem" ).val();
       val = latex_to_HTML(val);
-      preview.innerHTML = val;
+      $( "#preview" ).html(val);
       MathJax.Hub.Queue(
         ["Typeset", MathJax.Hub, preview]
       );

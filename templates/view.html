@@ -22,21 +22,24 @@
     <table id="problems" class="table table-striped table-bordered">
       <thead>
         <tr>
+          <td>ID&nbsp;&nbsp;</td>
           <td>Problem&nbsp;&nbsp;</td>
           <td>Difficulty&nbsp;&nbsp;</td>
           <td>Tags&nbsp;&nbsp;</td>
           <td>Author&nbsp;&nbsp;</td>
-          <td>Date&nbsp;&nbsp;</td>
+          <!-- <td>Date&nbsp;&nbsp;</td> -->
           <td>Comments&nbsp;&nbsp;</td>
         </tr>
       </thead>
       {% for problem in problems %}
         <tr>
           <td>
+            <a href="/edit?problem_id={{ problem.key.id }}">#{{forloop.counter}}</a>
+          </td>
+          <td>
             <span class="problem">
               {{ problem.problem }}
             </span>
-            <a href="/edit?problem_id={{ problem.key.id }}"><span class="glyphicon glyphicon-edit"></span></a>
             <br>
             <div style="min-height:2.1em">
               <span class="answer" style="display: inline-block; min-width: 90px; line-height: 2em;">
@@ -61,7 +64,6 @@
           <td>
             <button class="btn btn-xs btn-primary" onclick="toggle($( this ).html())">&zwnj;{{ problem.author }}&zwnj;</button>
           </td>
-          <td>{{ problem.date }} <span hidden> {{ problem.date.second }} {{ problem.date.microsecond }} </span></td>
           <td>{{ problem.comments }}</td>
         </tr>
       {% endfor %}

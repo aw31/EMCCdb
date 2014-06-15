@@ -19,16 +19,21 @@ function latex_to_HTML(str){
     }
     if(str.charAt(i) == '}' && str.charAt(i - 1) != '\\'){
       if(seen[seen.length - 1].length > 0){
-        res = res.slice(0, index[index.length - 1]) + "<" + seen[seen.length - 1] + ">" + res.slice(index[index.length - 1]);
-        res += "</" + seen[seen.length - 1] + ">";
+        res =
+          res.slice(0, index[index.length - 1]) +
+          "<" + seen[seen.length - 1] + ">" +
+          res.slice(index[index.length - 1]) +
+          "</" + seen[seen.length - 1] + ">";
       } else {
-        res = res.slice(0, index[index.length - 1]) + "{" + res.slice(index[index.length - 1]);
-        res += "}";
+        res =
+          res.slice(0, index[index.length - 1]) +
+          "{" + res.slice(index[index.length - 1]) + "}";
       }
       seen.pop();
       index.pop();
       continue;
     }
+
     var done = 0;
     for(var j = 0; j < token.length; j++){
       if(i + token[j].length <= len){

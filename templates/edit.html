@@ -55,8 +55,8 @@
   <script src="static/latex_to_HTML.js"></script>
 
   <script type="text/javascript">
-    $(document).ready(function(){
-        $("#difficulty").val("{{ problem.difficulty }}");
+    $( document ).ready(function(){
+        $( "#difficulty" ).val("{{ problem.difficulty }}");
         update();
     });
   </script>
@@ -64,10 +64,9 @@
   <!-- updates preview -->
   <script>
     function update(){
-      preview = document.getElementById("preview");
-      val = document.getElementById("problem").value;
+      var val = $( "#problem" ).val();
       val = latex_to_HTML(val);
-      preview.innerHTML = val;
+      $( "#preview" ).html(val);
       MathJax.Hub.Queue(
         ["Typeset", MathJax.Hub, preview]
       );

@@ -55,19 +55,6 @@ function toggle(tag){
 }
 
 $(document).ready(function(){
-  // converts stuff like \emph{blah} to html
-  $( '.problem' ).each(function(){
-    $( this ).html(latex_to_HTML($( this ).html()));
-  });
-
-  // allows answer to be shown when hovering
-  $( '.answer' ).each(function(){
-    $( this ).hover(
-      function(){ $( this ).children().toggle(); },
-      function(){ $( this ).children().toggle(); }
-    );
-  });
-
   // compares difficulties of form "<button>75%</button>"
   jQuery.extend( jQuery.fn.dataTableExt.oSort, {
     "difficulty-pre": function(x){
@@ -80,10 +67,10 @@ $(document).ready(function(){
     "difficulty-asc": function(x, y){ return x - y; }
   });
 
-  // compares IDs of form "<a href=blah>#12</a>"
+  // compares IDs of form "<a href=blah>12</a>"
   jQuery.extend( jQuery.fn.dataTableExt.oSort, {
     "id-pre": function(x){
-      x = x.slice(x.indexOf('#') + 1);
+      x = x.slice(x.indexOf('>') + 1);
       x = x.slice(0, x.indexOf('<'));
       return parseInt(x);
     }, 
@@ -126,10 +113,12 @@ $(document).ready(function(){
       setCookie('tags', get_filtered());
     },
     'fnInitComplete': function() {
-      $( '#problems_filter' ).children().children().keyup(function(){
+      var search = $( '#problems_filter' ).children().children();
+      search.keyup(function(){
         filtered = {};
         $( '#filtered' ).empty();
       });
+      search.attr('placeholder', 'id42');
       filter(false);
       if(get_filtered() !== ''){
         $( '#problems_filter' ).children().children().val('');
@@ -138,6 +127,18 @@ $(document).ready(function(){
     'iDisplayLength': 25
   });
 
+  // converts stuff like \emph{blah} to html
+  $( '.problem' ).each(function(){
+    $( this ).html(latex_to_HTML($( this ).html()));
+  });
+
+  // allows answer to be shown when hovering
+  $( '.answer' ).each(function(){
+    $( this ).hover(
+      function(){ $( this ).children().toggle(); },
+      function(){ $( this ).children().toggle(); }
+    );
+  });
 });
 
 // get datatable to resize with window

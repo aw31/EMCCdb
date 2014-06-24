@@ -12,7 +12,7 @@
 {% block content %} {% include "navbar.html" %}
 
   {% if problem_committee %}
-    <div class="page-header"><h1>View Problems</h1></div>
+    <div class="page-header"><h1>View</h1></div>
     <div class="panel panel-default">
       <div class="panel-heading">
         <h3 class="panel-title">Filters</h3>
@@ -34,7 +34,8 @@
       {% for problem in problems %}
         <tr>
           <td>
-            <a href="/edit?problem_id={{ problem.key.id }}">#{{forloop.counter}}</a>
+            <a href="/edit?problem_id={{ problem.key.id }}">{{forloop.counter}}</a>
+            <span hidden>id{{ forloop.counter}}</span>
           </td>
           <td>
             <span class="problem">
@@ -64,7 +65,7 @@
           <td>
             <button class="btn btn-xs btn-primary" onclick="toggle($( this ).html())">&zwnj;{{ problem.author }}&zwnj;</button>
           </td>
-          <td>{{ problem.comments }}</td>
+          <td style="white-space:pre-wrap;">{{ problem.comments }}</td>
         </tr>
       {% endfor %}
     </table>

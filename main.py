@@ -70,9 +70,14 @@ class EditHandler(auth.BaseHandler):
             self.abort(404)
         if problem_committee(user_id):
             problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
-            self.response.out.write(template.render('templates/edit.html', {'problem': problem, 'problem_committee': True}))
+            index = Problem.query(Problem.date <= problem.date).count()
+            self.response.out.write(template.render('templates/edit.html',
+                                                    {'problem': problem,
+                                                     'index': index, 
+                                                     'problem_committee': True}))
         else:
-            self.response.out.write(template.render('templates/edit.html', {'problem_committee': False}))
+            self.response.out.write(template.render('templates/edit.html',
+                                                    {'problem_committee': False}))
 
     @user_required
     def post(self):
@@ -203,5 +208,5 @@ application = webapp2.WSGIApplication(
         ('/logout', auth.LogoutHandler),
     ], 
     config=config,
-    debug=True,
+    debug=True
 )

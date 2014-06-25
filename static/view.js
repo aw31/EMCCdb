@@ -113,6 +113,21 @@ $(document).ready(function(){
       setCookie('tags', get_filtered());
     },
     'fnInitComplete': function() {
+      var nodes = $('#problems').dataTable().fnGetNodes();
+      for(var i = 0; i < nodes.length; i++){
+        // converts stuff like \emph{blah} to html
+        $( nodes[i] ).find('.problem').each(function(){
+          $( this ).html(latex_to_HTML($( this ).html()));
+        });
+        // allows answer to be shown when hovering
+        $( nodes[i] ).find('.answer').each(function(){
+          $( this ).hover(
+            function(){ $( this ).children().toggle(); },
+            function(){ $( this ).children().toggle(); }
+          );
+        });
+      }
+
       var search = $( '#problems_filter' ).children().children();
       search.keyup(function(){
         filtered = {};
@@ -125,19 +140,6 @@ $(document).ready(function(){
       }
     },
     'iDisplayLength': 25
-  });
-
-  // converts stuff like \emph{blah} to html
-  $( '.problem' ).each(function(){
-    $( this ).html(latex_to_HTML($( this ).html()));
-  });
-
-  // allows answer to be shown when hovering
-  $( '.answer' ).each(function(){
-    $( this ).hover(
-      function(){ $( this ).children().toggle(); },
-      function(){ $( this ).children().toggle(); }
-    );
   });
 });
 

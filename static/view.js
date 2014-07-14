@@ -126,6 +126,10 @@ $(document).ready(function(){
             function(){ $( this ).children().toggle(); }
           );
         });
+        // adds filtering by tag
+        $('.tag').click(function(){
+          toggle($( this ).html());
+        });
       }
 
       var search = $( '#problems_filter' ).children().children();

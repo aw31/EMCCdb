@@ -1,0 +1,21 @@
+.answer {
+  display: inline-block;
+  min-width: 90px;
+  line-height: 2em;
+}
+
+.ans-div {
+  min-height: 2.1em;
+}
+
+.tag-cell {
+  line-height:1.6em
+}
+
+.comment {
+  white-space: pre-wrap;
+}
+
+#filtered {
+  padding: 0; min-height: 42px;
+}

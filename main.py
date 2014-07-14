@@ -55,9 +55,9 @@ class ViewHandler(auth.BaseHandler):
         user_id = self.user_info()['user_id']
         if problem_committee(user_id):
             problems = Problem.query().order(Problem.date)
-            self.response.out.write(template.render('templates/view.html', {'problems': problems, 'problem_committee': True}))
+            self.response.out.write(template.render('templates/view.min.html', {'problems': problems, 'problem_committee': True}))
         else:
-            self.response.out.write(template.render('templates/view.html', {'problem_committee': False}))
+            self.response.out.write(template.render('templates/view.min.html', {'problem_committee': False}))
 
 # Edits submitted problems, only accessible to problem committee.
 class EditHandler(auth.BaseHandler):

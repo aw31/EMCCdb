@@ -1,4 +1,4 @@
-// yummy cookie setting/getting (from http://stackoverflow.com/a/18652401/3376090)
+// cookie setting/getting (from http://stackoverflow.com/a/18652401/3376090)
 function setCookie(key, value) {
   var expires = new Date();
   expires.setTime(expires.getTime() + (1 * 24 * 60 * 60 * 1000));
@@ -24,14 +24,14 @@ function get_filtered(){
 
 // redraws datatable with rows that contain elements of filtered
 function filter(search){
-  var button = '<button class="btn btn-xs btn-primary" style="margin: 10px 2px 10px 8px" onclick="toggle($( this ).html())">';
-  $( '#filtered' ).empty();
+  var button = '<button class="btn btn-xs btn-primary tag">';
+  $('#filtered').empty();
   for(var v in filtered){
-    $( '#filtered' ).append(button + v + '</button>');
+    $('#filtered').append(button + v + '</button>');
   }
   if(search){
-    $( '#problems_filter' ).children().children().val('');
-    $( '#problems' ).DataTable().search(get_filtered()).draw();
+    $('#problems_filter').children().children().val('');
+    $('#problems').DataTable().search(get_filtered()).draw();
   }
 }
 
@@ -55,6 +55,13 @@ function toggle(tag){
 }
 
 $(document).ready(function(){
+  $('.tag').on('click', function(){
+    toggle($(this).html());
+  });
+  $('.answer').on('mouseenter mouseleave', function(){
+    $(this).children().toggle();
+  });
+
   // compares difficulties of form "<button>75%</button>"
   jQuery.extend( jQuery.fn.dataTableExt.oSort, {
     "difficulty-pre": function(x){
@@ -88,7 +95,7 @@ $(document).ready(function(){
   }
 
   // sets up datatable
-  $( '#problems' ).dataTable({
+  $('#problems').dataTable({
     'aoColumnDefs': [
       {
         'bSortable': true,
@@ -116,31 +123,20 @@ $(document).ready(function(){
       var nodes = $('#problems').dataTable().fnGetNodes();
       for(var i = 0; i < nodes.length; i++){
         // converts stuff like \emph{blah} to html
-        $( nodes[i] ).find('.problem').each(function(){
-          $( this ).html(latex_to_HTML($( this ).html()));
-        });
-        // allows answer to be shown when hovering
-        $( nodes[i] ).find('.answer').each(function(){
-          $( this ).hover(
-            function(){ $( this ).children().toggle(); },
-            function(){ $( this ).children().toggle(); }
-          );
-        });
-        // adds filtering by tag
-        $('.tag').click(function(){
-          toggle($( this ).html());
+        $(nodes[i]).find('.problem').each(function(){
+          $(this).html(latex_to_HTML($(this).html()));
         });
       }
 
-      var search = $( '#problems_filter' ).children().children();
+      var search = $('#problems_filter').children().children();
       search.keyup(function(){
         filtered = {};
-        $( '#filtered' ).empty();
+        $('#filtered').empty();
       });
       search.attr('placeholder', 'id42');
       filter(false);
       if(get_filtered() !== ''){
-        $( '#problems_filter' ).children().children().val('');
+        $('#problems_filter').children().children().val('');
       }
     },
     'iDisplayLength': 25
@@ -148,7 +144,7 @@ $(document).ready(function(){
 });
 
 // get datatable to resize with window
-$( window ).bind('resize', function(){
-  $( '#problems' ).css('width', '100%');
+$(window).bind('resize', function(){
+  $('#problems').css('width', '100%');
 });
 

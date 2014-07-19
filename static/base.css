@@ -8,12 +8,16 @@
   min-height: 2.1em;
 }
 
-.tag-cell {
-  line-height:1.6em
-}
-
 .comment {
   white-space: pre-wrap;
+}
+
+#filtered>.tag {
+  margin: 10px 2px 10px 8px;
+}
+
+.tag-cell {
+  line-height:1.6em
 }
 
 #filtered {

@@ -12,14 +12,30 @@
   white-space: pre-wrap;
 }
 
+.problem-form {
+  max-width: 500px;
+}
+
+#filtered {
+  padding: 0; min-height: 42px;
+}
+
 #filtered>.tag {
   margin: 10px 2px 10px 8px;
+}
+
+.status_wrapper {
+  position: absolute;
+  top: 80px;
+  left: 0px;
+  width: 100%;
+}
+
+.tag {
+  margin: 1px;
 }
 
 .tag-cell {
   line-height:1.6em
 }
 
-#filtered {
-  padding: 0; min-height: 42px;
-}

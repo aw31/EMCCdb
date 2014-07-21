@@ -55,10 +55,10 @@ function toggle(tag){
 }
 
 $(document).ready(function(){
-  $('.tag').on('click', function(){
+  $(document).on('click', '.tag', function(){
     toggle($(this).html());
   });
-  $('.answer').on('mouseenter mouseleave', function(){
+  $(document).on('mouseenter mouseleave', '.answer', function(){
     $(this).children().toggle();
   });
 
@@ -142,6 +142,54 @@ $(document).ready(function(){
     'iDisplayLength': 25
   });
 });
+
+function update_problem(r) {
+  var table = $('#problems').DataTable();
+
+  var prob = table.cell(r['index'] - 1, 1).data();
+  var $prob = $(prob);
+  $($prob[0]).html(r['problem'])
+  $prob.find('.ans').html('<strong>Answer</strong>:' + r['answer'])
+  prob_data = $('<div>').append($prob.clone()).html();
+  table.cell(r['index'] - 1, 1).data(prob_data);
+
+  var button = '<button class="btn btn-xs btn-primary tag">&zwnj;';
+  var button_close = '&zwnj;</button>';
+
+  if(r['difficulty'] == ''){
+    r['difficulty'] = '?';
+  }
+  var diff_data = button + r['difficulty'] + button_close;
+  table.cell(r['index'] - 1, 2).data(diff_data);
+
+  var tag_data = ''
+  for (var i = 0; i < r['tags'].length; i++) {
+    tag_data += button + r['tags'][i] + button_close + ' ';
+  }
+  table.cell(r['index'] - 1, 3).data(tag_data);
+
+  var author_data = button + r['author'] + button_close;
+  table.cell(r['index'] - 1, 4).data(author_data);
+
+  table.cell(r['index'] - 1, 5).data(r['comments']);
+  
+  table.row(r['index'] - 1).draw();
+}
+
+function update() {
+  $.get('get_changes?date=' + last_update, function (r) {
+    ids = r['ids'];
+    for (var i = 0; i < ids.length; i++) {
+      $.get('get_problem?problem_id=' + ids[i], function (r) {
+        console.log(r);
+        update_problem(r);
+      });
+      last_update = r['date'];
+    }
+  });
+}
+
+setInterval(update, 5000);
 
 // get datatable to resize with window
 $(window).bind('resize', function(){

@@ -35,7 +35,7 @@ class Problem(ndb.Model):
     answer = ndb.StringProperty(indexed=False)
     date = ndb.DateTimeProperty(auto_now_add=True)
     tags = ndb.StringProperty(indexed=False, repeated=True)
-    used = ndb.BooleanProperty(indexed=True, default=False)
+    used = ndb.BooleanProperty(indexed=True, default=False) # Set to True if deleted. 
     author = ndb.StringProperty()
     difficulty = ndb.StringProperty()
     comments = ndb.TextProperty()
@@ -46,6 +46,7 @@ class Change(ndb.Model):
     date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
 
 # Lists submitted problems, only accessible to problem committee. 
+# If nonempty 'deleted' parameter is provided, then we return list of soft-deleted problems. 
 class ViewHandler(auth.BaseHandler):
     @user_required
     def get(self):
@@ -93,38 +94,47 @@ class EditHandler(auth.BaseHandler):
             problem.difficulty = self.request.get('difficulty')
             problem.comments = self.request.get('comments')
             problem.put()
+
+            # Log this edit by creating a new Change entity. 
             change = Change(parent=ndb.Key('Changes', 'default'))
             change.problem_id = problem_id
             change.user_id = user_id
             change.put()
+
+            # Set last_write to now in memcache, so we know we need to update. 
             memcache.set('last_write', str(datetime.now()))
-            print str(datetime.now()) + " " + memcache.get('last_write')
         else:
             self.redirect('/')
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
+# Returns list of changes made since 'date' and current time. 
+# Accessible only to problem committee. 
 class ChangeHandler(auth.BaseHandler):
     @user_required
     def get(self):
         user_id = self.user_info()['user_id']
         if problem_committee(user_id):
+            # Parameter date contains the last time we checked for changes. 
             try: 
                 last_update = datetime.strptime(self.request.get('date'), DATE_FORMAT)
             except: 
                 self.abort(404)
+
             self.response.headers['Content-Type'] = 'application/json'
 
-            last_write = memcache.get('last_write')
-            print last_write
-            print last_update
+            # We store the time of the last edit operation in memcache. 
+            # This way, we don't need to read from datastore every time we poll. 
             done = False
+            last_write = memcache.get('last_write')
             if last_write is not None:
                 last_write = datetime.strptime(last_write, DATE_FORMAT)
                 if last_update > last_write:
                     date = str(datetime.now())
                     self.response.out.write(json.dumps({'ids': [], 'date': date}))
                     done = True
+
+            # If there were edits, return list of changes. 
             if not done:
                 changes = Change.query(Change.date >= last_update)
                 ids = set()
@@ -138,6 +148,8 @@ class ChangeHandler(auth.BaseHandler):
         else:
             self.response.out.write(PROBLEM_COMMITTEE_ONLY)
 
+# Returns data about queried problem. 
+# Accessible only to problem committee. 
 class ProblemHandler(auth.BaseHandler):
     @user_required
     def get(self):
@@ -198,7 +210,7 @@ EXPORT_HEADER = """\
 
 """
 
-# Creates tex from problem data
+# Creates tex from problem data. 
 def export(author=False):
     doc = EXPORT_HEADER
     if author:
@@ -222,7 +234,7 @@ def export(author=False):
         doc += '\\end{document}\n'
     return doc
 
-# Exports all submitted problems as tex, only accessible to problem committee
+# Exports all submitted problems as TeX, only accessible to problem committee. 
 class ExportHandler(auth.BaseHandler):
     @user_required
     def get(self):
@@ -235,7 +247,7 @@ class ExportHandler(auth.BaseHandler):
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write(PROBLEM_COMMITTEE_ONLY)
 
-# Exports all submitted problems as a pdf, only accessible to problem committee
+# Exports all submitted problems as a pdf, only accessible to problem committee. 
 class PdfHandler(auth.BaseHandler):
     @user_required
     def get(self):
@@ -254,6 +266,7 @@ class PdfHandler(auth.BaseHandler):
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write(PROBLEM_COMMITTEE_ONLY)
 
+# Soft deletes problem by setting 'used' to True. 
 class DeleteHandler(auth.BaseHandler):
     @user_required
     def get(self):
@@ -270,7 +283,7 @@ class DeleteHandler(auth.BaseHandler):
             problem.put()
         self.redirect('/')
 
-# Main page (contains problem submission)
+# Main page (and problem submission page). 
 class MainPage(auth.BaseHandler):
     @user_required
     def get(self):
@@ -300,6 +313,7 @@ config['webapp2_extras.sessions'] = {
         'secret_key': 'hella_secret',
 }
 
+# Handler for 404 errors. 
 def handle_404(request, response, exception):
     response.out.write(template.render('templates/404.html', {}))
     response.set_status(404)

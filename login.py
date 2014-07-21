@@ -3,7 +3,7 @@ import requests
 from ntlm import HTTPNtlmAuthHandler
 from HTMLParser import HTMLParser
 
-# From https://github.com/OnlineHarkness/PEAauth
+# From https://github.com/OnlineHarkness/PEAauth .
 
 class FormParser(HTMLParser):
     def __init__(self):
@@ -20,7 +20,7 @@ class FormParser(HTMLParser):
         elif tag == 'form':
             self.url = 'https://fs.exeter.edu' + dict(attrs)['action']
 
-# returns True if successful, False otherwise
+# Returns True if successful, False otherwise. 
 def login(username, password):
     r = requests.get('https://www.outlook.com/owa/exeter.edu')
     url = r.url

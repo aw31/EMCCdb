@@ -148,11 +148,14 @@ $(document).ready(function(){
   });
 });
 
+// we get the problem with given id, and update its value in the DataTable
 function update_problem(id) {
   $.get('get_problem?problem_id=' + id, function (r) {
     var table = $('#problems').DataTable();
 
+    // hacky. id_map is an Object declared in templates that maps problem ids to indices
     var index = id_map[r['id']];
+
     var prob = table.cell(index - 1, 1).data();
     var $prob = $(prob);
     $($prob[0]).html(latex_to_HTML(r['problem']))
@@ -183,9 +186,12 @@ function update_problem(id) {
   });
 }
 
+// gets and updates recently changed problems
 function update() {
   $.get('get_changes?date=' + last_update, function (r) {
-    last_update = r['date'];
+    if(r['date']){
+      last_update = r['date'];
+    }
     ids = r['ids'];
     for (var i = 0; i < ids.length; i++) {
       update_problem(ids[i]);

@@ -8,6 +8,7 @@
     }
   </style>
   <script>
+    // set initial value for last_update (see view.js)
     last_update = "{{ date }}";
   </script>
 {% endblock %}
@@ -28,7 +29,6 @@
       <td>Difficulty&nbsp;&nbsp;</td>
       <td>Tags&nbsp;&nbsp;</td>
       <td>Author&nbsp;&nbsp;</td>
-      <!-- <td>Date&nbsp;&nbsp;</td> -->
       <td>Comments&nbsp;&nbsp;</td>
     </tr>
   </thead>
@@ -37,6 +37,7 @@
 
 <script>
 // sketchy hack :O
+// maps problem ids to indices (used in view.js)
 id_map = new Object();
 {% for problem in problems %}id_map[{{ problem.key.id }}]={{ forloop.counter }};{% endfor %}
 </script>

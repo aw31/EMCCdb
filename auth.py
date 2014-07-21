@@ -7,7 +7,7 @@ from webapp2_extras import sessions
 from webapp2_extras import auth
 from google.appengine.ext.webapp import template
 
-# From https://github.com/OnlineHarkness/app/tree/master/handlers
+# From https://github.com/OnlineHarkness/app/tree/master/handlers .
 
 class BaseHandler(webapp2.RequestHandler):
     @webapp2.cached_property

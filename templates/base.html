@@ -21,7 +21,9 @@
   <body style="padding: 20px 0 20px 0">
 
     <div class="container">
-      <span class="status_wrapper">
+      {% block navbar %}
+      {% endblock %}
+      <span id="status_wrapper">
         {% for message in status %}
           <h4 align="center" class="status">
             <span class="label {{ message.1 }}" style="padding: 10px">

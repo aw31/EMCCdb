@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 
+{% block navbar %}{% include "navbar.html" %}{% endblock%}
 {% block content %}
-  {% include "navbar.html" %}
-
   {% if problem_committee %}
   <div class="page-header"><h1>Edit <small>Problem {{ index }}</small></h1></div>
     <div class="panel panel-default" style="max-width: 500px">
@@ -11,7 +10,7 @@
       </div>
       <div class="panel-body" id="preview"></div>
     </div>
-    <form method="post" action="/edit" class="form" style="max-width: 500px; margin-bottom: 30px">
+    <form id ="edit-form" class="form problem-form">
       <div class="form-group">
         <label>Problem</label>
         <textarea class="form-control" name="problem" rows="5" id="problem">{{ problem.problem }}</textarea>
@@ -71,5 +70,22 @@
         ["Typeset", MathJax.Hub, preview]
       );
     }
+  </script>
+
+  <script>
+    $('#edit-form').submit(function(e){
+      $.ajax({
+        type: 'POST',
+        url: '/edit',
+        data: $('#edit-form').serialize(),
+      });
+      window.scrollTo(0, 0);
+      var success = '<h4 align="center" class="status">' + 
+        '<span class="label alert-success" style="padding: 10px">' + 
+          'Success!' + 
+          '</span></h4>';
+      $(success).appendTo('#status_wrapper').delay(2000).fadeOut('slow');
+      e.preventDefault();
+    });
   </script>
 {% endblock %}

@@ -24,7 +24,7 @@
   margin: 10px 2px 10px 8px;
 }
 
-.status_wrapper {
+#status_wrapper {
   position: absolute;
   top: 80px;
   left: 0px;

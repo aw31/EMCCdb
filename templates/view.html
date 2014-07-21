@@ -7,73 +7,38 @@
       margin-left: 4px;
     }
   </style>
+  <script>
+    last_update = "{{ date }}";
+  </script>
 {% endblock %}
-
 {% block content %} {% include "navbar.html" %}
-
-  {% if problem_committee %}
-    <div class="page-header"><h1>View</h1></div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h3 class="panel-title">Filters</h3>
-      </div>
-      <div id="filtered" class="panel-body"></div>
-    </div>
-    <table id="problems" class="table table-striped table-bordered">
-      <thead>
-        <tr>
-          <td>ID&nbsp;&nbsp;</td>
-          <td>Problem&nbsp;&nbsp;</td>
-          <td>Difficulty&nbsp;&nbsp;</td>
-          <td>Tags&nbsp;&nbsp;</td>
-          <td>Author&nbsp;&nbsp;</td>
-          <!-- <td>Date&nbsp;&nbsp;</td> -->
-          <td>Comments&nbsp;&nbsp;</td>
-        </tr>
-      </thead>
-      {% for problem in problems %}
-        <tr>
-          <td>
-            <a href="/edit?problem_id={{ problem.key.id }}">{{ forloop.counter }}</a>
-            <span hidden>id{{ forloop.counter }}</span>
-          </td>
-          <td>
-            <span class="problem">
-              {{ problem.problem }}
-            </span>
-            <br>
-            <div class="ans-div">
-              <span class="answer">
-                <span><a>Show answer</a></span>
-                <span hidden><strong>Answer</strong>: {{ problem.answer }}</span>
-              </span>
-            </div>
-          </td>
-          <td>
-            <!-- &zwnj; delimits start/end of tag -->
-            {% if problem.difficulty != "" and problem.difficulty != "None" %}
-              <button class="btn btn-xs btn-primary tag">&zwnj;{{ problem.difficulty }}&zwnj;</button>
-            {% else %}
-              <button class="btn btn-xs btn-primary tag">&zwnj;?&zwnj;</button>
-            {% endif %}
-          </td>
-          <td class="tag-cell">
-            {% for tag in problem.tags %}
-              <button class="btn btn-xs btn-primary tag">&zwnj;{{ tag }}&zwnj;</button>
-            {% endfor %}
-          </td>
-          <td>
-            <button class="btn btn-xs btn-primary tag">&zwnj;{{ problem.author }}&zwnj;</button>
-          </td>
-          <td class="comment">{{ problem.comments }}</td>
-        </tr>
-      {% endfor %}
-    </table>
-  {% else %}
-    <div class="alert alert-danger">
-      Sorry, only problem committee members can view submitted problems.
-    </div>
-  {% endif %}
+{% if problem_committee %}
+<div class="page-header"><h1>View</h1></div>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">Filters</h3>
+  </div>
+  <div id="filtered" class="panel-body"></div>
+</div>
+<table id="problems" class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <td>ID&nbsp;&nbsp;</td>
+      <td>Problem&nbsp;&nbsp;</td>
+      <td>Difficulty&nbsp;&nbsp;</td>
+      <td>Tags&nbsp;&nbsp;</td>
+      <td>Author&nbsp;&nbsp;</td>
+      <!-- <td>Date&nbsp;&nbsp;</td> -->
+      <td>Comments&nbsp;&nbsp;</td>
+    </tr>
+  </thead>
+{% for problem in problems %}<tr><td><a href="/edit?problem_id={{ problem.key.id }}">{{ forloop.counter }}</a><span hidden>id{{ forloop.counter }}</span></td><td><span class="problem">{{ problem.problem }}</span><br><div class="ans-div"><span class="answer"><span><a>Show answer</a></span><span hidden class="ans"><strong>Answer</strong>: {{ problem.answer }}</span></span></div></td><td>{% if problem.difficulty != "" and problem.difficulty != "None" %}<button class="btn btn-xs btn-primary tag">&zwnj;{{ problem.difficulty }}&zwnj;</button>{% else %}<button class="btn btn-xs btn-primary tag">&zwnj;?&zwnj;</button>{% endif %}</td><td class="tag-cell">{% for tag in problem.tags %}<button class="btn btn-xs btn-primary tag">&zwnj;{{ tag }}&zwnj;</button> {% endfor %}</td><td><button class="btn btn-xs btn-primary tag">&zwnj;{{ problem.author }}&zwnj;</button></td><td class="comment">{{ problem.comments }}</td></tr>{% endfor %}
+</table>
+{% else %}
+<div class="alert alert-danger">
+  Sorry, only problem committee members can view submitted problems.
+</div>
+{% endif %}
 {% endblock %}
 
 {% block end %}

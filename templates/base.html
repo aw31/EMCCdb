@@ -13,12 +13,23 @@
     <!-- Base CSS -->
     <link rel="stylesheet" type="text/css" href="static/base.css">
 
+
     {% block head %}
     {% endblock %}
   </head>
 
   <body style="padding: 20px 0 20px 0">
+
     <div class="container">
+      <span class="status_wrapper">
+        {% for message in status %}
+          <h4 align="center" class="status">
+            <span class="label {{ message.1 }}" style="padding: 10px">
+              {{ message.0 }}
+            </span>
+          </h4>
+        {% endfor %}
+      </span>
       {% block content %}
       {% endblock %}
     </div>
@@ -45,6 +56,13 @@
     <!-- DataTables -->
     <script type="text/javascript" charset="utf8" src="static/jquery.dataTables.min.js"></script>
     <script type="text/javascript" charset="utf8" src="static/dataTables.bootstrap.min.js"></script>
+
+    <!-- Fades status messages -->
+    <script>
+      $(document).ready(function () {
+        $(".status").delay(2000).fadeOut("slow");
+      });
+    </script>
 
     {% block end %}
     {% endblock %}

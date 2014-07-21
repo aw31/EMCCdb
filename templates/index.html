@@ -4,13 +4,13 @@
   {% include "navbar.html" %}
 
   <div class="page-header"><h1>Submit</h1></div>
-  <div class="panel panel-default" style="max-width: 500px">
+  <div class="panel panel-default problem-form">
     <div class="panel-heading">
       <h3 class="panel-title">Preview</h3>
     </div>
     <div class="panel-body" id="preview"></div>
   </div>
-  <form method="post" action="/submit" class="form" style="max-width: 500px; margin-bottom: 30px">
+  <form method="post" action="/" class="form problem-form">
     <div class="form-group">
       <label>Problem</label> <small>You can use $\LaTeX$ to type up your problem!</small>
       <textarea class="form-control" name="problem" rows="5" id="problem"></textarea>
@@ -34,8 +34,12 @@
       <label>Tags</label> <small>A space separated list of tags. For example: "alg ari com nt geo".</small>
       <input type="text" class="form-control" name="tags">
     </div>
-    <input type="submit" class="btn btn-primary pull-right" value="Submit">
-    <button type="button" onclick="update()" class="btn btn-secondary pull-right" style="margin-right: 5px">Preview</button>
+    <div class="btn-toolbar">
+      <input type="submit" class="btn btn-primary pull-right" value="Submit">
+      <button type="button" onclick="update()" class="btn btn-secondary pull-right">
+        Preview
+      </button>
+    </div>
   </form>
 {% endblock %}
 

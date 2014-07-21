@@ -4,6 +4,7 @@ import os
 import json
 from datetime import datetime
 
+from google.appengine.api import memcache
 from google.appengine.ext import ndb
 from google.appengine.ext.webapp import template
 
@@ -96,8 +97,12 @@ class EditHandler(auth.BaseHandler):
             change.problem_id = problem_id
             change.user_id = user_id
             change.put()
+            memcache.set('last_write', str(datetime.now()))
+            print str(datetime.now()) + " " + memcache.get('last_write')
         else:
             self.redirect('/')
+
+DATE_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
 class ChangeHandler(auth.BaseHandler):
     @user_required
@@ -105,19 +110,31 @@ class ChangeHandler(auth.BaseHandler):
         user_id = self.user_info()['user_id']
         if problem_committee(user_id):
             try: 
-                last_update = datetime.strptime(self.request.get('date'), '%Y-%m-%d %H:%M:%S.%f')
+                last_update = datetime.strptime(self.request.get('date'), DATE_FORMAT)
             except: 
                 self.abort(404)
             self.response.headers['Content-Type'] = 'application/json'
-            changes = Change.query(Change.date >= last_update)
-            ids = set()
-            for change in changes:
-                ids.add(change.problem_id)
-            ids = list(ids)
-            if not ids:
-                ids = []
-            date = str(datetime.now())
-            self.response.out.write(json.dumps({'ids': ids, 'date': date}))
+
+            last_write = memcache.get('last_write')
+            print last_write
+            print last_update
+            done = False
+            if last_write is not None:
+                last_write = datetime.strptime(last_write, DATE_FORMAT)
+                if last_update > last_write:
+                    date = str(datetime.now())
+                    self.response.out.write(json.dumps({'ids': [], 'date': date}))
+                    done = True
+            if not done:
+                changes = Change.query(Change.date >= last_update)
+                ids = set()
+                for change in changes:
+                    ids.add(change.problem_id)
+                ids = list(ids)
+                if not ids:
+                    ids = []
+                date = str(datetime.now())
+                self.response.out.write(json.dumps({'ids': ids, 'date': date}))
         else:
             self.response.out.write(PROBLEM_COMMITTEE_ONLY)
 

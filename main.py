@@ -65,12 +65,12 @@ class EditHandler(auth.BaseHandler):
         user_id = self.user_info()['user_id']
         try:
             problem_id = int(self.request.get('problem_id'))
+            index = int(self.request.get('index'))
         except:
             self.abort(404)
         problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
         if not problem:
             self.abort(404)
-        index = Problem.query(Problem.date <= problem.date, Problem.used == False).count()
         context = {
             'problem': problem, 
             'index': index, 
@@ -96,7 +96,6 @@ class EditHandler(auth.BaseHandler):
             change.problem_id = problem_id
             change.user_id = user_id
             change.put()
-            self.redirect('/edit?problem_id=%s' % problem_id)
         else:
             self.redirect('/')
 
@@ -106,7 +105,6 @@ class ChangeHandler(auth.BaseHandler):
         user_id = self.user_info()['user_id']
         if problem_committee(user_id):
             try: 
-                print self.request.get('date')
                 last_update = datetime.strptime(self.request.get('date'), '%Y-%m-%d %H:%M:%S.%f')
             except: 
                 self.abort(404)
@@ -136,9 +134,8 @@ class ProblemHandler(auth.BaseHandler):
             if not problem:
                 self.abort(404)
             self.response.headers['Content-Type'] = 'application/json'
-            index = Problem.query(Problem.date <= problem.date, Problem.used == False).count()
             resp = {
-                'index': index, 
+                'id': problem.key.id(),
                 'problem': problem.problem, 
                 'answer': problem.answer, 
                 'difficulty': problem.difficulty,
@@ -280,7 +277,6 @@ class MainPage(auth.BaseHandler):
         context = {
             'problem_committee': problem_committee(user_id),
         }
-        self.response.out.write(template.render('templates/index.html', context))
 
 config = {}
 config['webapp2_extras.sessions'] = {

@@ -152,12 +152,13 @@ function update_problem(id) {
   $.get('get_problem?problem_id=' + id, function (r) {
     var table = $('#problems').DataTable();
 
-    var prob = table.cell(r['index'] - 1, 1).data();
+    var index = id_map[r['id']];
+    var prob = table.cell(index - 1, 1).data();
     var $prob = $(prob);
     $($prob[0]).html(latex_to_HTML(r['problem']))
     $prob.find('.ans').html('<strong>Answer</strong>: ' + r['answer'])
     prob_data = $('<div>').append($prob.clone()).html();
-    table.cell(r['index'] - 1, 1).data(prob_data);
+    table.cell(index - 1, 1).data(prob_data);
 
     var button = '<button class="btn btn-xs btn-primary tag">&zwnj;';
     var button_close = '&zwnj;</button>';
@@ -166,18 +167,18 @@ function update_problem(id) {
       r['difficulty'] = '?';
     }
     var diff_data = button + r['difficulty'] + button_close;
-    table.cell(r['index'] - 1, 2).data(diff_data);
+    table.cell(index - 1, 2).data(diff_data);
 
     var tag_data = ''
     for (var i = 0; i < r['tags'].length; i++) {
       tag_data += button + r['tags'][i] + button_close + ' ';
     }
-    table.cell(r['index'] - 1, 3).data(tag_data);
+    table.cell(index - 1, 3).data(tag_data);
 
     var author_data = button + r['author'] + button_close;
-    table.cell(r['index'] - 1, 4).data(author_data);
+    table.cell(index - 1, 4).data(author_data);
 
-    table.cell(r['index'] - 1, 5).data(r['comments']);
+    table.cell(index - 1, 5).data(r['comments']);
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
   });
 }

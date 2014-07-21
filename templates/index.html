@@ -62,9 +62,10 @@
     $('#problem-form').submit(function(e){
       $.ajax({
         type: 'POST',
-        url: '/edit',
-        data: $('#edit-form').serialize(),
+        url: '/',
+        data: $('#problem-form').serialize(),
       });
+      $('#problem-form').find('input[type=text], textarea').val('');
       window.scrollTo(0, 0);
       addStatus('Thanks for submitting!', 'alert-success');
       e.preventDefault();

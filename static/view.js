@@ -148,7 +148,7 @@ function update_problem(r) {
 
   var prob = table.cell(r['index'] - 1, 1).data();
   var $prob = $(prob);
-  $($prob[0]).html(r['problem'])
+  $($prob[0]).html(latex_to_HTML(r['problem']))
   $prob.find('.ans').html('<strong>Answer</strong>:' + r['answer'])
   prob_data = $('<div>').append($prob.clone()).html();
   table.cell(r['index'] - 1, 1).data(prob_data);
@@ -172,8 +172,7 @@ function update_problem(r) {
   table.cell(r['index'] - 1, 4).data(author_data);
 
   table.cell(r['index'] - 1, 5).data(r['comments']);
-  
-  table.row(r['index'] - 1).draw();
+  MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
 }
 
 function update() {

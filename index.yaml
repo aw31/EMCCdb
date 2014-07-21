@@ -11,6 +11,11 @@ indexes:
 # your application using appcfg.py.
 
 - kind: Problem
+  properties:
+  - name: used
+  - name: date
+
+- kind: Problem
   ancestor: yes
   properties:
   - name: author

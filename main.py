@@ -34,7 +34,7 @@ class Problem(ndb.Model):
     answer = ndb.StringProperty(indexed=False)
     date = ndb.DateTimeProperty(auto_now_add=True)
     tags = ndb.StringProperty(indexed=False, repeated=True)
-    used = ndb.BooleanProperty(default=False)
+    used = ndb.BooleanProperty(indexed=True, default=False)
     author = ndb.StringProperty()
     difficulty = ndb.StringProperty()
     comments = ndb.TextProperty()
@@ -49,7 +49,8 @@ class ViewHandler(auth.BaseHandler):
     @user_required
     def get(self):
         user_id = self.user_info()['user_id']
-        problems = Problem.query().order(Problem.date)
+        used = (self.request.get('deleted') != '')
+        problems = Problem.query(Problem.used == used).order(Problem.date)
         context = {
             'problems': problems,
             'problem_committee': problem_committee(user_id),
@@ -69,7 +70,7 @@ class EditHandler(auth.BaseHandler):
         problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
         if not problem:
             self.abort(404)
-        index = Problem.query(Problem.date <= problem.date).count()
+        index = Problem.query(Problem.date <= problem.date, Problem.used == False).count()
         context = {
             'problem': problem, 
             'index': index, 
@@ -134,7 +135,7 @@ class ProblemHandler(auth.BaseHandler):
             if not problem:
                 self.abort(404)
             self.response.headers['Content-Type'] = 'application/json'
-            index = Problem.query(Problem.date <= problem.date).count()
+            index = Problem.query(Problem.date <= problem.date, Problem.used == False).count()
             resp = {
                 'index': index, 
                 'problem': problem.problem, 
@@ -186,7 +187,7 @@ EXPORT_HEADER = """\
 def export(author=False):
     doc = EXPORT_HEADER
     if author:
-        problems = Problem.query().order(Problem.author)
+        problems = Problem.query(Problem.used == False).order(Problem.author)
         current_author = ''
         for problem in problems:
             if problem.author != current_author:
@@ -197,7 +198,7 @@ def export(author=False):
             doc += '\\end{problem}\n\n'
         doc += '\\end{document}\n'
     else:
-        problems = Problem.query().order(Problem.date)
+        problems = Problem.query(Problem.used == False).order(Problem.date)
         for problem in problems:
             #doc += '\\begin{problem}[' + problem.answer.rstrip('\n') + ']\n'
             doc += '\\begin{problem}\n'
@@ -250,7 +251,8 @@ class DeleteHandler(auth.BaseHandler):
             problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
             if not problem:
                 self.abort(404)
-            problem.key.delete()
+            problem.used = True
+            problem.put()
 
 # Main page (contains problem submission)
 class MainPage(auth.BaseHandler):

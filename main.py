@@ -114,6 +114,8 @@ class ChangeHandler(auth.BaseHandler):
             for change in changes:
                 ids.add(change.problem_id)
             ids = list(ids)
+            if not ids:
+                ids = []
             date = str(datetime.now())
             self.response.out.write(json.dumps({'ids': ids, 'date': date}))
         else:
@@ -236,6 +238,20 @@ class PdfHandler(auth.BaseHandler):
             self.response.headers['Content-Type'] = 'text/plain'
             self.response.out.write(PROBLEM_COMMITTEE_ONLY)
 
+class DeleteHandler(auth.BaseHandler):
+    @user_required
+    def get(self):
+        user_id = self.user_info()['user_id']
+        if problem_committee(user_id):
+            try:
+                problem_id = int(self.request.get('problem_id'))
+            except:
+                self.abort(404)
+            problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
+            if not problem:
+                self.abort(404)
+            problem.key.delete()
+
 # Main page (contains problem submission)
 class MainPage(auth.BaseHandler):
     @user_required
@@ -259,7 +275,6 @@ class MainPage(auth.BaseHandler):
         user_id = self.user_info()['user_id']
         context = {
             'problem_committee': problem_committee(user_id),
-            'status': [('Thanks for submitting!', 'alert-success')]
         }
         self.response.out.write(template.render('templates/index.html', context))
 
@@ -277,6 +292,7 @@ application = webapp2.WSGIApplication(
         ('/', MainPage),
         ('/view', ViewHandler),
         ('/edit', EditHandler),
+        ('/delete', DeleteHandler), 
         ('/get_changes', ChangeHandler),
         ('/get_problem', ProblemHandler),
         ('/export', ExportHandler),

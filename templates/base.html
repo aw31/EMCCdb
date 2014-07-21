@@ -64,6 +64,12 @@
       $(document).ready(function () {
         $(".status").delay(2000).fadeOut("slow");
       });
+
+      function addStatus(message, style){
+        var status = '<h4 align="center" class="status"><span class="label status-message ';
+        status += style + '">' + message + '</span></h4>';
+        $(status).appendTo('#status_wrapper').delay(2000).fadeOut('slow');
+      }
     </script>
 
     {% block end %}

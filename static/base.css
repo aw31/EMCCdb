@@ -24,6 +24,10 @@
   margin: 10px 2px 10px 8px;
 }
 
+.status-message {
+  padding: 10px;
+}
+
 #status_wrapper {
   position: absolute;
   top: 80px;
@@ -32,10 +36,9 @@
 }
 
 .tag {
-  margin: 1px;
+  margin: 2px;
 }
 
 .tag-cell {
   line-height:1.6em
 }
-

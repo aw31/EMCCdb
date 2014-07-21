@@ -10,7 +10,7 @@
     </div>
     <div class="panel-body" id="preview"></div>
   </div>
-  <form method="post" action="/" class="form problem-form">
+  <form id="problem-form" class="form problem-form">
     <div class="form-group">
       <label>Problem</label> <small>You can use $\LaTeX$ to type up your problem!</small>
       <textarea class="form-control" name="problem" rows="5" id="problem"></textarea>
@@ -56,5 +56,18 @@
         ["Typeset", MathJax.Hub, preview]
       );
     }
+  </script>
+
+  <script>
+    $('#problem-form').submit(function(e){
+      $.ajax({
+        type: 'POST',
+        url: '/edit',
+        data: $('#edit-form').serialize(),
+      });
+      window.scrollTo(0, 0);
+      addStatus('Thanks for submitting!', 'alert-success');
+      e.preventDefault();
+    });
   </script>
 {% endblock %}

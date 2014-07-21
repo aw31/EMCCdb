@@ -4,7 +4,7 @@
 {% block content %}
   {% if problem_committee %}
   <div class="page-header"><h1>Edit <small>Problem {{ index }}</small></h1></div>
-    <div class="panel panel-default" style="max-width: 500px">
+    <div class="panel panel-default problem-form">
       <div class="panel-heading">
         <h3 class="panel-title">Preview</h3>
       </div>
@@ -39,8 +39,12 @@
         <label>Comments</label>
         <textarea class="form-control" name="comments" rows="2">{{ problem.comments }}</textarea>
       </div>
-      <input type="submit" class="btn btn-primary pull-right" value="Submit">
-      <button type="button" onclick="update()" class="btn btn-secondary pull-right" style="margin-right: 5px">Preview</button>
+      <div class="btn-toolbar">
+        <input type="submit" class="btn btn-primary pull-right" value="Submit">
+        <button type="button" onclick="update()" class="btn btn-secondary pull-right">
+          Preview
+        </button>
+      </div>
       <input type="hidden" name="problem_id" value="{{ problem.key.id }}">
     </form>
   {% else %}
@@ -80,11 +84,7 @@
         data: $('#edit-form').serialize(),
       });
       window.scrollTo(0, 0);
-      var success = '<h4 align="center" class="status">' + 
-        '<span class="label alert-success" style="padding: 10px">' + 
-          'Success!' + 
-          '</span></h4>';
-      $(success).appendTo('#status_wrapper').delay(2000).fadeOut('slow');
+      addStatus('Saved!', 'alert-success');
       e.preventDefault();
     });
   </script>

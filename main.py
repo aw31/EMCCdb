@@ -106,7 +106,8 @@ class ChangeHandler(auth.BaseHandler):
         user_id = self.user_info()['user_id']
         if problem_committee(user_id):
             try: 
-                last_update = datetime.strptime(self.request.get('date'), '%Y-%m-%d %I:%M:%S.%f')
+                print self.request.get('date')
+                last_update = datetime.strptime(self.request.get('date'), '%Y-%m-%d %H:%M:%S.%f')
             except: 
                 self.abort(404)
             self.response.headers['Content-Type'] = 'application/json'
@@ -253,6 +254,7 @@ class DeleteHandler(auth.BaseHandler):
                 self.abort(404)
             problem.used = True
             problem.put()
+        self.redirect('/')
 
 # Main page (contains problem submission)
 class MainPage(auth.BaseHandler):

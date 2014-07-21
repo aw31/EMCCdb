@@ -184,11 +184,11 @@ function update_problem(id) {
 
 function update() {
   $.get('get_changes?date=' + last_update, function (r) {
+    last_update = r['date'];
     ids = r['ids'];
     for (var i = 0; i < ids.length; i++) {
       update_problem(ids[i]);
     }
-    last_update = r['date'];
   });
 }
 

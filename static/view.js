@@ -193,6 +193,7 @@ function update() {
       last_update = r['date'];
     }
     ids = r['ids'];
+    if(ids === 'undefined') return;
     for (var i = 0; i < ids.length; i++) {
       update_problem(ids[i]);
     }

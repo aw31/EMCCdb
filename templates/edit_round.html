@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "navbar.html" %}
+  {% if problem_committee %}
+  <div class="page-header"><h1>{{ round.name }}</h1></div>
+  <span>Drag and drop the row numbers to reorder!</span>
+  <button class="btn btn-primary pull-right" id="save">Save</button>
+  <table id="round" class="table table-bordered sorted_table">
+    <col width="42">
+    <thead>
+      <tr>
+        <td>#&nbsp;&nbsp;</td>
+        <td>Problems&nbsp;&nbsp;</td>
+      </tr>
+    </thead>
+    <tbody id="round-body">
+      {% for problem, exist in problems %}
+      <tr id="row-{{ forloop.counter }}">
+        <td class="handle">
+          <span class="grip-wrapper">
+            <span class="grip"></span><br>
+            <span class="grip"></span><br>
+            <span class="grip"></span>
+          </span>
+          {% if exist %}
+          <a target="_blank" href="edit?problem_id={{ problem.key.id }}&index={{ forloop.counter }}&round={{ round.name }}">
+            <span class="counter pull-right">{{ forloop.counter }}</span>
+          </a>
+          {% else %}
+            <a href="#"><span class="counter pull-right">{{ forloop.counter }}</span></a>
+          {% endif %}
+        </td>
+        {% if exist %}
+          <td class="problem" id="{{ problem.key.id }}">
+            {{ problem.problem }}
+          </td>
+        {% else %}
+          <td class="problem" id="1">
+            <form id="form-{{ forloop.counter }}" class="add-form">
+              <input type="text" class="form-control" name="id" placeholder="Problem ID"></input>
+            </form>
+          </td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div class="alert alert-danger">
+      Sorry, only problem committee members can edit submitted problems.
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block end %}
+  <script src="static/latex_to_HTML.js"></script>
+
+  <!-- JQuery Sortable -->
+  <script src="static/jquery-sortable.min.js"></script>
+
+  <script>
+    function renumber(){
+      var i = 0, drag_i;
+      $('#round-body tr').each(function(){
+        if(!$(this).hasClass('dragged')){
+          i++;
+          $(this).find('.counter').first().html(i);
+        }
+        if($(this).hasClass('placeholder')){
+          drag_i = i;
+        }
+      });
+      $('#round-body tr').each(function(){
+        if($(this).hasClass('dragged')){
+          $(this).find('.counter').first().html(drag_i);
+        }
+      });
+    }
+    $(document).ready(function(){
+      $('#round').sortable({
+        containerSelector: 'table',
+        handle: '.grip-wrapper',
+        itemPath: '> tbody',
+        itemSelector: 'tr',
+        placeholder: '<tr class="placeholder" />',
+        afterMove: function(){
+          renumber();
+          $('body').addClass('changed');
+        },
+      });
+    });
+  </script>
+
+  <script>
+    var round_name = '{{ round.name }}';
+    var round_id = {{ round.key.id }};
+    var delete_button = ' <button class="btn btn-xs btn-secondary delete"><span class="glyphicon glyphicon-remove"></span></button>';
+    var id_form_open = '<form class="add-form" id="form-';
+    var id_form_close='"><input type="text" class="form-control" name="id" placeholder="Problem ID"></input></form>';
+
+    $(document).on('submit', '.add-form', function(e){
+      var id = $(this).find('input').val();
+      var form_id = $(this).attr('id');
+      $.get('get_problem?problem_id=' + id + '&index=true', function(r){
+        $('#' + form_id).parent().parent().find('a').attr('href', 'edit?problem_id=' + r['id'] + '&index=' + form_id.slice(5) + '&round=' + round_name);
+        $('#' + form_id).parent().parent().find('a').attr('target', '_blank');
+        $('#' + form_id).parent().attr('id', r['id']);
+        $('#' + form_id).parent().html(latex_to_HTML(r['problem']) + delete_button);
+        $('body').addClass('changed');
+        MathJax.Hub.Queue(
+          ["Typeset", MathJax.Hub]
+        );
+      }).fail(function(){
+        $('#' + form_id).find('input').prop('disabled', false);
+        addStatus('Oops, the ID is invalid.', 'alert-danger');
+      });
+      $(this).find('input').prop('disabled', true);
+      e.preventDefault();
+    });
+
+    $('#save').click(save);
+    function save(){
+      var problems = [];
+      $('.problem').each(function(){
+        problems.push($(this).attr('id'));
+      });
+      $.ajax({
+        type: 'POST',
+        url: '/edit_round',
+        data: {
+          problems: JSON.stringify(problems),
+          round_id: round_id
+        },
+        success: function(){
+          addStatus('Saved!', 'alert-success');
+          $('body').removeClass('changed');
+        },
+        error: function(){
+          addStatus('Oops, an error occurred.', 'alert-danger');
+        }
+      });
+    }
+
+    function undo(del_row, del_id){
+      $.get('get_problem?problem_id=' + del_id, function(r){
+        $('#row-' + del_row).find('td:nth-child(2)').attr('id', r['id']);
+        var prob = latex_to_HTML(r['problem']) + delete_button;
+        $('#row-' + del_row).find('td:nth-child(2)').html(prob);
+        $('#row-' + del_row).find('a').attr('href', 'edit?problem_id=' + del_id + '&index=' + del_row + '&round=' + round_name);
+        $('#row-' + del_row).find('a').attr('target', '_blank');
+        $('body').addClass('changed');
+        MathJax.Hub.Queue(
+          ["Typeset", MathJax.Hub]
+        );
+      }).fail(function(){
+        addStatus('Oops, the ID is invalid.', 'alert-danger');
+      });
+    }
+
+    $(document).ready(function(){
+      $('.problem').each(function(){
+        if($(this).attr('id') != '1'){
+          $(this).html(latex_to_HTML($(this).html()) + delete_button);
+        }
+      });
+      $(document).on('mouseenter', '.problem', function(){
+        $(this).find('button').show();
+      });
+      $(document).on('mouseleave', '.problem', function(){
+        $(this).find('button').hide();
+      });
+      $(document).on('click', '.undo', function(){
+        params = $(this).attr('id').split(' ');
+        console.log(params[0], params[1]);
+        $(this).parent().fadeOut('slow');
+        undo(params[0], params[1]);
+      });
+      $(document).on('click', '.delete', function(){
+        var del_id = $(this).parent().attr('id');
+        var del_row = $(this).parent().parent().attr('id').slice(4);
+        $(this).parent().attr('id', '1');
+        $(this).parent().parent().find('a').attr('href', '#');
+        $(this).parent().parent().find('a').attr('target', '');
+        $(this).parent().html(id_form_open + del_row + id_form_close);
+        $('body').addClass('changed');
+        addStatus('Deleted. <a href="javascript:void(0)" class="undo" id="' + del_row + ' ' + del_id + '">Undo?</a>', 'alert-success', 5000);
+      });
+    });
+
+    $(window).on('beforeunload', function () {
+      if($('.changed').length > 0){
+        return 'You have unsaved changes!';
+      }
+    });
+  </script>
+{% endblock %}
+

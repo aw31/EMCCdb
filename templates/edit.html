@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block navbar %}{% include "navbar.html" %}{% endblock%}
 {% block content %}
+  {% include "navbar.html" %}
   {% if problem_committee %}
-  <div class="page-header"><h1>Edit <small>Problem {{ index }}</small></h1></div>
+  <div class="page-header"><h1>Edit <small>{{ round }} Problem {{ index }}</small></h1></div>
     <div class="panel panel-default problem-form">
       <div class="panel-heading">
         <h3 class="panel-title">Preview</h3>
@@ -82,9 +82,14 @@
         type: 'POST',
         url: '/edit',
         data: $('#edit-form').serialize(),
+        success: function(){
+          addStatus('Saved!', 'alert-success');
+        },
+        error: function(){
+          addStatus('Oops, an error occurred.', 'alert-danger');
+        }
       });
       window.scrollTo(0, 0);
-      addStatus('Saved!', 'alert-success');
       e.preventDefault();
     });
   </script>

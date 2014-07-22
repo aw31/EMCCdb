@@ -64,10 +64,15 @@
         type: 'POST',
         url: '/',
         data: $('#problem-form').serialize(),
+        success: function(){
+          addStatus('Thanks for submitting!', 'alert-success');
+          $('#problem-form').find('input[type=text], select, textarea').val('');
+        },
+        error: function(){
+          addStatus('Oops, an error occurred.', 'alert-danger');
+        }
       });
-      $('#problem-form').find('input[type=text], textarea').val('');
       window.scrollTo(0, 0);
-      addStatus('Thanks for submitting!', 'alert-success');
       e.preventDefault();
     });
   </script>

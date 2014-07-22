@@ -1,4 +1,5 @@
 import webapp2
+import ast
 import cgi
 import os
 import json
@@ -27,7 +28,7 @@ PROBLEM_COMMITTEE_ONLY = "Sorry, only problem commitee members can view submitte
 
 def problem_committee(user_id):
     # Checks if user of current session is in problem comittee. 
-    problem_committee = ['awei', 'kwei', 'asun1', 'yyao', 'zsong', 'cqian', 'jhlin']
+    problem_committee = ['awei', 'kwei', 'asun1', 'yyao', 'zsong', 'cqian', 'jhlin', 'zfeng']
     return user_id in problem_committee
 
 class Problem(ndb.Model):
@@ -45,6 +46,11 @@ class Change(ndb.Model):
     user_id = ndb.StringProperty()
     date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
 
+class Round(ndb.Model):
+    name = ndb.StringProperty(indexed=True)
+    length = ndb.IntegerProperty()
+    problems = ndb.IntegerProperty(repeated=True)
+
 # Lists submitted problems, only accessible to problem committee. 
 # If nonempty 'deleted' parameter is provided, then we return list of soft-deleted problems. 
 class ViewHandler(auth.BaseHandler):
@@ -52,7 +58,7 @@ class ViewHandler(auth.BaseHandler):
     def get(self):
         user_id = self.user_info()['user_id']
         used = (self.request.get('deleted') != '')
-        problems = Problem.query(Problem.used == used).order(Problem.date)
+        problems = Problem.query(Problem.used == used).order(Problem.date).fetch(batch_size=100)
         context = {
             'problems': problems,
             'problem_committee': problem_committee(user_id),
@@ -67,16 +73,18 @@ class EditHandler(auth.BaseHandler):
         user_id = self.user_info()['user_id']
         try:
             problem_id = int(self.request.get('problem_id'))
-            index = int(self.request.get('index'))
+            index = self.request.get('index')
+            round = self.request.get('round')
         except:
             self.abort(404)
         problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
         if not problem:
             self.abort(404)
         context = {
+            'round': round, 
             'problem': problem, 
             'index': index, 
-            'problem_committee': problem_committee(user_id)
+            'problem_committee': problem_committee(user_id), 
         }
         self.response.out.write(template.render('templates/edit.html', context))
 
@@ -157,9 +165,13 @@ class ProblemHandler(auth.BaseHandler):
         if problem_committee(user_id):
             try:
                 problem_id = int(self.request.get('problem_id'))
+                index = (self.request.get('index') != '')
             except:
                 self.abort(404)
-            problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
+            if index:
+                problem = Problem.query(Problem.used == False).order(Problem.date).fetch(limit=1, offset=problem_id - 1)[0]
+            else:
+                problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
             if not problem:
                 self.abort(404)
             self.response.headers['Content-Type'] = 'application/json'
@@ -175,6 +187,82 @@ class ProblemHandler(auth.BaseHandler):
             self.response.out.write(json.dumps(resp))
         else:
             self.response.out.write(PROBLEM_COMMITTEE_ONLY)
+
+class RoundCreateHandler(auth.BaseHandler):
+    @user_required
+    def get(self):
+        user_id = self.user_info()['user_id']
+        context = {
+            'problem_committee': problem_committee(user_id),
+        }
+        self.response.out.write(template.render('templates/add_round.html', context))
+
+    @user_required
+    def post(self):
+        user_id = self.user_info()['user_id']
+        if problem_committee(user_id):
+            round = Round(parent=ndb.Key('Rounds', 'default'))
+            round.name = self.request.get('name')
+            round.length = int(self.request.get('length'))
+            round.problems = [1] * round.length
+            round.put()
+        else:
+            self.response.out.write(PROBLEM_COMMITTEE_ONLY)
+
+class RoundViewHandler(auth.BaseHandler):
+    @user_required
+    def get(self):
+        user_id = self.user_info()['user_id']
+        rounds = Round.query().order(Round.name)
+        context = {
+            'rounds': rounds,
+            'problem_committee': problem_committee(user_id),
+        }
+        self.response.out.write(template.render('templates/view_rounds.html', context))
+
+class RoundEditHandler(auth.BaseHandler):
+    @user_required
+    def get(self):
+        user_id = self.user_info()['user_id']
+        try:
+            round_id = int(self.request.get('round_id'))
+        except:
+            self.abort(404)
+        round = Round.get_by_id(round_id, parent=ndb.Key('Rounds', 'default'))
+        if not round:
+            self.abort(404)
+
+        problems = []
+        for problem_id in round.problems:
+            problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
+            if problem:
+                problems.append((problem, True))
+            else:
+                problems.append((None, False))
+
+        context = {
+            'round': round, 
+            'problems': problems,
+            'problem_committee': problem_committee(user_id)
+        }
+        self.response.out.write(template.render('templates/edit_round.html', context))
+
+    @user_required
+    def post(self):
+        user_id = self.user_info()['user_id']
+        try:
+            round_id = int(self.request.get('round_id'))
+            problems = map(int, ast.literal_eval(self.request.get('problems')))
+        except:
+            self.abort(404)
+        round = Round.get_by_id(round_id, parent=ndb.Key('Rounds', 'default'))
+        if not round:
+            self.abort(404)
+
+        round.problems = problems
+        round.put()
+        if not round:
+            self.abort(404)
 
 EXPORT_HEADER = """\
 \\documentclass[12pt]{article}
@@ -214,7 +302,7 @@ EXPORT_HEADER = """\
 def export(author=False):
     doc = EXPORT_HEADER
     if author:
-        problems = Problem.query(Problem.used == False).order(Problem.author)
+        problems = Problem.query(Problem.used == False).order(Problem.author).fetch(batch_size=100)
         current_author = ''
         for problem in problems:
             if problem.author != current_author:
@@ -225,7 +313,7 @@ def export(author=False):
             doc += '\\end{problem}\n\n'
         doc += '\\end{document}\n'
     else:
-        problems = Problem.query(Problem.used == False).order(Problem.date)
+        problems = Problem.query(Problem.used == False).order(Problem.date).fetch(batch_size=100)
         for problem in problems:
             #doc += '\\begin{problem}[' + problem.answer.rstrip('\n') + ']\n'
             doc += '\\begin{problem}\n'
@@ -303,10 +391,6 @@ class MainPage(auth.BaseHandler):
         problem.author = self.user_info()['user_id']
         problem.comments = ""
         problem.put()
-        user_id = self.user_info()['user_id']
-        context = {
-            'problem_committee': problem_committee(user_id),
-        }
 
 config = {}
 config['webapp2_extras.sessions'] = {
@@ -326,6 +410,9 @@ application = webapp2.WSGIApplication(
         ('/delete', DeleteHandler), 
         ('/get_changes', ChangeHandler),
         ('/get_problem', ProblemHandler),
+        ('/add_round', RoundCreateHandler),
+        ('/view_rounds', RoundViewHandler),
+        ('/edit_round', RoundEditHandler),
         ('/export', ExportHandler),
         ('/pdf', PdfHandler),
         ('/login', auth.LoginHandler),

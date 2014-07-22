@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "navbar.html" %}
+
+  <div class="page-header"><h1>Create Round</h1></div>
+  <form id="round-form" class="form problem-form">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" class="form-control" name="name">
+    </div>
+    <div class="form-group">
+      <label>Length</label>
+      <input type="number" class="form-control" name="length">
+    </div>
+    <div class="btn-toolbar">
+      <input type="submit" class="btn btn-primary pull-right" value="Submit">
+    </div>
+  </form>
+{% endblock %}
+
+{% block end %}
+  <script>
+    $('#round-form').submit(function(e){
+      $.ajax({
+        type: 'POST',
+        url: '/add_round',
+        data: $('#round-form').serialize(),
+        success: function(){
+          $('#round-form').find('input[type=text], input[type=number], textarea').val('');
+          addStatus('Round created.', 'alert-success');
+        },
+        error: function(){
+          addStatus('Oops, an error occurred.', 'alert-danger');
+        }
+      });
+      window.scrollTo(0, 0);
+      e.preventDefault();
+    });
+  </script>
+{% endblock %}
+

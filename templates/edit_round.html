@@ -36,11 +36,20 @@
           {% endif %}
         </td>
         {% if exist %}
-          <td class="problem" id="{{ problem.key.id }}">
-            {{ problem.problem }}
+          <td>
+            <div class="problem" id="{{ problem.key.id }}">
+              {{ problem.problem }}
+            </div>
+            <div class="tags">&nbsp;
+              <span class="btn btn-primary btn-xs">{{ problem.author }}</span>
+              <span class="btn btn-primary btn-xs">{{ problem.difficulty }}</span>
+              {% for tag in problem.tags %}
+                <span class="btn btn-primary btn-xs">{{ tag }}</span>
+              {% endfor %}
+            </div>
           </td>
         {% else %}
-          <td class="problem" id="1">
+          <td>
             <form class="add-form">
               <input type="text" class="form-control" name="id" placeholder="Problem ID"></input>
             </form>

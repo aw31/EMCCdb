@@ -59,6 +59,10 @@
   line-height:1.6em
 }
 
+.tags {
+  margin-top: 4px;
+}
+
 /* stolen from http://johnny.github.io/jquery-sortable/css/application.css */
 .sorted_table tr.placeholder {
   display: block;

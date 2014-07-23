@@ -27,6 +27,10 @@ var id_form = '<form class="add-form">' +
               'placeholder="Problem ID"></input></form>';
 var del_open = 'Deleted. <a href="javascript:void(0)" class="undo" id="';
 var del_close = '">Undo?</a>';
+var tag_div_open = '<div class="tags">&nbsp;';
+var tag_div_close = '</div>';
+var tag_open = '<span class="btn btn-primary btn-xs">';
+var tag_close = '</span> ';
 
 function getTeX(){
   // returns round -> TeX
@@ -38,13 +42,26 @@ function getTeX(){
   return output;
 }
 
+function make_tag(tag){
+  if(tag.length === 0) return tag_open + '?' + tag_close;
+  return tag_open + tag + tag_close;
+}
+
 function undo(del_row, del_id){
   // undoes delete by adding problem with id del_id to row del_row
   $.get('get_problem?problem_id=' + del_id, function(r){
-    var row = $('#round tr:nth-child(' + del_row + ')');
+    var row = $('#round-body tr:nth-child(' + del_row + ')');
     row.find('.raw').html(r.problem);
-    row.find('td:nth-child(2)').attr('id', r.id);
-    var prob = latex_to_HTML(r.problem) + delete_button;
+    var div_open = '<div class="problem" id="' + del_id + '">';
+    var div_close = delete_button + '</div>';
+    var prob = div_open + latex_to_HTML(r.problem) + div_close;
+    var tags = ''
+    tags += make_tag(r.author);
+    tags += make_tag(r.difficulty);
+    for(var i = 0; i < r.tags.length; i++){
+      tags += make_tag(r.tags[i]);
+    }
+    prob += tag_div_open + tags + tag_div_close;
     row.find('td:nth-child(2)').html(prob);
     $('body').addClass('changed');
     MathJax.Hub.Queue(
@@ -95,12 +112,12 @@ $(document).ready(function(){
 
   $(document).on('click', '.delete', function(){
     // deletes problem in same cell as delete button
-    var cell = $(this).parent();
-    var row = cell.parent();
-    var id = cell.attr('id');
+    var div = $(this).parent();
+    var row = div.parent().parent();
+    var id = div.attr('id');
     var index = row.find('.counter').html();
-    cell.attr('id', '1');
-    cell.html(id_form);
+    div.attr('id', '1');
+    div.parent().html(id_form);
     row.find('.raw').html('');
     $('body').addClass('changed');
     addStatus(del_open + index + ' ' + id + del_close, 'alert-success', 5000);
@@ -124,10 +141,19 @@ $(document).ready(function(){
     $.get('get_problem?problem_id=' + id + '&index=true', function(r){
       var row = form.parent().parent();
       row.find('.raw').html(r.problem);
-      form.parent().attr('id', r.id);
       form.find('input').prop('disabled', false);
       form.find('input').val('');
-      form.parent().html(latex_to_HTML(r.problem) + delete_button);
+      var div_open = '<div class="problem" id="' + r.id + '">';
+      var div_close = delete_button + '</div>';
+      var prob = div_open + latex_to_HTML(r.problem) + div_close;
+      var tags = ''
+      tags += make_tag(r.author);
+      tags += make_tag(r.difficulty);
+      for(var i = 0; i < r.tags.length; i++){
+        tags += make_tag(r.tags[i]);
+      }
+      prob += tag_div_open + tags + tag_div_close;
+      form.parent().html(prob);
       $('body').addClass('changed');
       MathJax.Hub.Queue(
         ["Typeset", MathJax.Hub]
@@ -150,7 +176,8 @@ $(document).ready(function(){
   $('#pdf').click(function(){
     // opens round -> pdf in new tab
     var output = encodeURIComponent(getTeX());
-    window.open('compile?tex=' + output, '_blank');
+    //window.open('compile?tex=' + output, '_blank');
+    window.open('compile?tex=broken', '_blank');
   });
 
   $('#save').click(function(){

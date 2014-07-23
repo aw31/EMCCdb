@@ -345,6 +345,8 @@ class CompileHandler(auth.BaseHandler):
     @problem_committee_required
     def get(self):
         """ Compiles LaTeX in get request. """
+        self.response.out.write('Sorry, this is currently broken.')
+        return
         doc = self.request.get('tex')
         success, content_type, out = latex.to_pdf(doc)
 

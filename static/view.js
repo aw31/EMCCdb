@@ -1,3 +1,5 @@
+'use strict';
+
 // cookie setting/getting (from http://stackoverflow.com/a/18652401/3376090)
 function setCookie(key, value) {
   var expires = new Date();
@@ -158,9 +160,9 @@ function update_problem(id) {
 
     var prob = table.cell(index - 1, 1).data();
     var $prob = $(prob);
-    $($prob[0]).html(latex_to_HTML(r['problem']))
-    $prob.find('.ans').html('<strong>Answer</strong>: ' + r['answer'])
-    prob_data = $('<div>').append($prob.clone()).html();
+    $($prob[0]).html(latex_to_HTML(r['problem']));
+    $prob.find('.ans').html('<strong>Answer</strong>: ' + r['answer']);
+    var prob_data = $('<div>').append($prob.clone()).html();
     table.cell(index - 1, 1).data(prob_data);
 
     var button = '<button class="btn btn-xs btn-primary tag">&zwnj;';
@@ -192,7 +194,7 @@ function update() {
     if(r['date']){
       last_update = r['date'];
     }
-    ids = r['ids'];
+    var ids = r['ids'];
     if(ids === 'undefined') return;
     for (var i = 0; i < ids.length; i++) {
       update_problem(ids[i]);

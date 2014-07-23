@@ -1,3 +1,5 @@
+""" Function for authentication with PEA servers. """
+
 import urllib2
 import requests
 from ntlm import HTTPNtlmAuthHandler
@@ -20,10 +22,11 @@ class FormParser(HTMLParser):
         elif tag == 'form':
             self.url = 'https://fs.exeter.edu' + dict(attrs)['action']
 
-# Returns True if successful, False otherwise. 
 def login(username, password):
-    r = requests.get('https://www.outlook.com/owa/exeter.edu')
-    url = r.url
+    """ Attempts to login to Exeter servers. 
+        Returns True if successful, False otherwise. """
+    resp = requests.get('https://www.outlook.com/owa/exeter.edu')
+    url = resp.url
 
     if 'integrated' in url:
         req = urllib2.Request(url)
@@ -35,12 +38,13 @@ def login(username, password):
         handler = urllib2.urlopen(req)
         return handler.getcode() == 200
     else:
+        # This case still seems a bit buggy?
         parser = FormParser()
-        parser.feed(r.text)
+        parser.feed(resp.text)
         parser.close()
         payload = parser._dict
-        payload[u'ctl00$ContentPlaceHolder1$UsernameTextBox'] = unicode(username)
-        payload[u'ctl00$ContentPlaceHolder1$PasswordTextBox'] = unicode(password)
-        p = requests.post(parser.url, data=payload)
-        return 'Working' in p.text
+        payload['ctl00$ContentPlaceHolder1$UsernameTextBox'] = unicode(username)
+        payload['ctl00$ContentPlaceHolder1$PasswordTextBox'] = unicode(password)
+        post = requests.post(parser.url, data=payload)
+        return 'Working' in post.text
 

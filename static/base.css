@@ -16,10 +16,6 @@
   display: none;
 }
 
-.problem-form {
-  max-width: 500px;
-}
-
 #filtered {
   padding: 0; min-height: 42px;
 }
@@ -32,7 +28,11 @@
   font-size: 0.6em;
 }
 
-#save {
+.problem-form {
+  max-width: 500px;
+}
+
+.round-edit-toolbar {
   margin-bottom: 10px;
 }
 
@@ -46,7 +46,7 @@
 
 #status_wrapper {
   position: fixed;
-  top: 80px;
+  top: 70px;
   left: 0px;
   width: 100%;
 }
@@ -60,9 +60,6 @@
 }
 
 /* stolen from http://johnny.github.io/jquery-sortable/css/application.css */
-.sorted_table .handle {
-}
-
 .sorted_table tr.placeholder {
   display: block;
   background: red;
@@ -76,7 +73,6 @@
   content: "";
   position: absolute;
   width: 0;
-  height: 0;
   border: 5px solid transparent;
   border-left-color: red;
   margin-top: -5px;
@@ -106,7 +102,7 @@
   margin-left: -4px;
   display: inline-block;
   line-height: 0px;
-  cursor: pointer;
+  cursor: grabbing;
   position: absolute;
   height: 100%;
 }

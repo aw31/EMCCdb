@@ -1,7 +1,7 @@
+""" EMCCdb application """
+
 import webapp2
 import ast
-import cgi
-import os
 import json
 from datetime import datetime
 
@@ -13,228 +13,300 @@ import auth
 import latex
 
 def user_required(handler):
-    # Decorator that checks if there's a user associated with the current session.
-    # Will also fail if there's no session present.
+    """ Decorator that checks if current session has user.
+    Will also fail if there's no session present. """
     def check_login(self, *args, **kwargs):
-        auth = self.auth
-        if not auth.get_user_by_session():
+        """ Redirects user to login if not logged in. """
+        if not self.user_info():
             self.redirect('/login', abort=True)
         else:
             return handler(self, *args, **kwargs)
 
     return check_login
 
-PROBLEM_COMMITTEE_ONLY = "Sorry, only problem commitee members can view submitted problems."
+PROBLEM_COMMITTEE = ['awei', 'kwei', 'asun1', 'yyao', 'zsong', 'cqian', \
+                     'jhlin', 'zfeng']
 
-def problem_committee(user_id):
-    # Checks if user of current session is in problem comittee. 
-    problem_committee = ['awei', 'kwei', 'asun1', 'yyao', 'zsong', 'cqian', 'jhlin', 'zfeng']
-    return user_id in problem_committee
+def problem_committee_required(handler):
+    """ Checks if user of current session is in problem committee. """
+    def check_problem_committee(self, *args, **kwargs):
+        """ Redirects user to problem_committee if not in problem committee. """
+        user_id = self.user_info()['user_id']
+        if not user_id in PROBLEM_COMMITTEE:
+            self.redirect('/problem_committee', abort=True)
+        else:
+            return handler(self, *args, **kwargs)
+
+    return check_problem_committee
 
 class Problem(ndb.Model):
+    """ Problem model. """
     problem = ndb.StringProperty(indexed=False)
     answer = ndb.StringProperty(indexed=False)
     date = ndb.DateTimeProperty(auto_now_add=True)
     tags = ndb.StringProperty(indexed=False, repeated=True)
-    used = ndb.BooleanProperty(indexed=True, default=False) # Set to True if deleted. 
+    used = ndb.BooleanProperty(indexed=True, default=False) # True if deleted. 
     author = ndb.StringProperty()
     difficulty = ndb.StringProperty()
     comments = ndb.TextProperty()
 
 class Change(ndb.Model):
+    """ Change model, tracks modifications to Problems. """
     problem_id = ndb.IntegerProperty(indexed=False)
     user_id = ndb.StringProperty()
     date = ndb.DateTimeProperty(auto_now_add=True, indexed=True)
 
 class Round(ndb.Model):
+    """ Round model. """
     name = ndb.StringProperty(indexed=True)
     length = ndb.IntegerProperty()
     problems = ndb.IntegerProperty(repeated=True)
+    weights = ndb.IntegerProperty(repeated=True) # Not implemented.
+    last_update = ndb.DateTimeProperty(auto_now_add=True) # Not implemented.
+    year = ndb.StringProperty()
 
-# Lists submitted problems, only accessible to problem committee. 
-# If nonempty 'deleted' parameter is provided, then we return list of soft-deleted problems. 
-class ViewHandler(auth.BaseHandler):
+class MainPage(auth.BaseHandler):
+    """ Main page (and problem submission page). """
     @user_required
     def get(self):
+        """ Returns problem submission form. """
         user_id = self.user_info()['user_id']
+        context = {
+            'not_problem_committee': user_id not in PROBLEM_COMMITTEE
+        }
+        output = template.render('templates/index.html', context)
+        self.response.out.write(output)
+
+    @user_required
+    def post(self):
+        """ Saves new problem. """
+        problem = Problem(parent=ndb.Key('Problems', 'default'))
+        problem.problem = self.request.get('problem')
+        problem.answer = self.request.get('answer')
+        problem.tags = self.request.get('tags').lower().split()
+        problem.difficulty = self.request.get('difficulty')
+        problem.author = self.user_info()['user_id']
+        problem.comments = ''
+        problem.put()
+
+class ViewHandler(auth.BaseHandler):
+    """ Handler for viewing submitted problems. """
+    @user_required
+    @problem_committee_required
+    def get(self):
+        """ Returns list of submitted problems. 
+            If nonempty 'deleted' parameter is provided,
+            then we return list of soft-deleted problems. """
         used = (self.request.get('deleted') != '')
-        problems = Problem.query(Problem.used == used).order(Problem.date).fetch(batch_size=100)
+        problems = Problem.query(Problem.used == used). \
+                           order(Problem.date). \
+                           fetch(batch_size=300)
         context = {
             'problems': problems,
-            'problem_committee': problem_committee(user_id),
             'date': str(datetime.now())
         }
-        self.response.out.write(template.render('templates/view.html', context))
+        output = template.render('templates/view.html', context)
+        self.response.out.write(output)
 
-# Edits submitted problems, only accessible to problem committee.
 class EditHandler(auth.BaseHandler):
+    """ Edits submitted problems. """
     @user_required
+    @problem_committee_required
     def get(self):
-        user_id = self.user_info()['user_id']
+        """ Paramater to get argument is (long) problem_id. """
         try:
             problem_id = int(self.request.get('problem_id'))
             index = self.request.get('index')
             round = self.request.get('round')
-        except:
+        except ValueError:
             self.abort(404)
-        problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
+        parent = ndb.Key('Problems', 'default')
+        problem = Problem.get_by_id(problem_id, parent=parent)
         if not problem:
             self.abort(404)
         context = {
             'round': round, 
             'problem': problem, 
             'index': index, 
-            'problem_committee': problem_committee(user_id), 
         }
-        self.response.out.write(template.render('templates/edit.html', context))
+        output = template.render('templates/edit.html', context)
+        self.response.out.write(output)
 
     @user_required
+    @problem_committee_required
     def post(self):
-        user_id = self.user_info()['user_id']
-        if problem_committee(user_id):
+        """ Saves form to problem with ID problem_id. """
+        problem_id = int(self.request.get('problem_id'))
+        parent = ndb.Key('Problems', 'default')
+        problem = Problem.get_by_id(problem_id, parent=parent)
+        if not problem:
+            self.abort(404)
+        problem.problem = self.request.get('problem')
+        problem.answer = self.request.get('answer')
+        problem.tags = self.request.get('tags').lower().split()
+        problem.difficulty = self.request.get('difficulty')
+        problem.comments = self.request.get('comments')
+        problem.put()
+
+        # Log this edit by creating a new Change entity. 
+        change = Change(parent=ndb.Key('Changes', 'default'))
+        change.problem_id = problem_id
+        change.user_id = self.user_info()['user_id']
+        change.put()
+
+        # Set last_write to now in memcache, so we know we need to update. 
+        memcache.set('last_write', str(datetime.now()))
+
+class DeleteHandler(auth.BaseHandler):
+    """ Handler for problem deletion. """
+    @user_required
+    @problem_committee_required
+    def get(self):
+        """ Soft deletes problem by setting 'used' to True. """
+        try:
             problem_id = int(self.request.get('problem_id'))
-            problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
-            if not problem:
+        except ValueError:
+            self.abort(404)
+        parent = ndb.Key('Problems', 'default')
+        problem = Problem.get_by_id(problem_id, parent=parent)
+        if not problem:
+            self.abort(404)
+        problem.used = True
+        problem.put()
+        self.redirect('/')
+
+class ProblemHandler(auth.BaseHandler):
+    """ Returns data about queried problem. """
+    @user_required
+    @problem_committee_required
+    def get(self):
+        """ Accepts two types of queries:
+            If index is empty, then return problem with long ID problem_id. 
+            Otherwise, return problem with short ID (index) problem_id. 
+            (Short ID / index of problem is # of problems that were added
+            with date <= its date.) """
+        try:
+            problem_id = int(self.request.get('problem_id'))
+            index = (self.request.get('index') != '')
+        except ValueError:
+            self.abort(404)
+        if index:
+            try:
+                problem = Problem.query(Problem.used == False). \
+                                  order(Problem.date). \
+                                  fetch(limit=1, offset=problem_id - 1)[0]
+            except IndexError:
                 self.abort(404)
-            problem.problem = self.request.get('problem')
-            problem.answer = self.request.get('answer')
-            problem.tags = self.request.get('tags').lower().split()
-            problem.difficulty = self.request.get('difficulty')
-            problem.comments = self.request.get('comments')
-            problem.put()
-
-            # Log this edit by creating a new Change entity. 
-            change = Change(parent=ndb.Key('Changes', 'default'))
-            change.problem_id = problem_id
-            change.user_id = user_id
-            change.put()
-
-            # Set last_write to now in memcache, so we know we need to update. 
-            memcache.set('last_write', str(datetime.now()))
         else:
-            self.redirect('/')
+            parent = ndb.Key('Problems', 'default')
+            problem = Problem.get_by_id(problem_id, parent=parent)
+        if not problem:
+            self.abort(404)
+        self.response.headers['Content-Type'] = 'application/json'
+        resp = {
+            'id': problem.key.id(),
+            'problem': problem.problem, 
+            'answer': problem.answer, 
+            'difficulty': problem.difficulty,
+            'tags': problem.tags, 
+            'author': problem.author, 
+            'comments': problem.comments
+        }
+        self.response.out.write(json.dumps(resp))
 
 DATE_FORMAT = '%Y-%m-%d %H:%M:%S.%f'
 
-# Returns list of changes made since 'date' and current time. 
-# Accessible only to problem committee. 
 class ChangeHandler(auth.BaseHandler):
+    """ Returns list of changes made since 'date' and current time. 
+        Accessible only to problem committee. """
     @user_required
+    @problem_committee_required
     def get(self):
-        user_id = self.user_info()['user_id']
-        if problem_committee(user_id):
-            # Parameter date contains the last time we checked for changes. 
-            try: 
-                last_update = datetime.strptime(self.request.get('date'), DATE_FORMAT)
-            except: 
-                self.abort(404)
+        """ Parameter date contains the last time we checked for changes. """
+        try: 
+            last_update_str = self.request.get('date')
+            last_update = datetime.strptime(last_update_str, DATE_FORMAT)
+        except ValueError: 
+            self.abort(404)
 
-            self.response.headers['Content-Type'] = 'application/json'
+        self.response.headers['Content-Type'] = 'application/json'
 
-            # We store the time of the last edit operation in memcache. 
-            # This way, we don't need to read from datastore every time we poll. 
-            done = False
-            last_write = memcache.get('last_write')
-            if last_write is not None:
-                last_write = datetime.strptime(last_write, DATE_FORMAT)
-                if last_update > last_write:
-                    date = str(datetime.now())
-                    self.response.out.write(json.dumps({'ids': [], 'date': date}))
-                    done = True
-
-            # If there were edits, return list of changes. 
-            if not done:
-                changes = Change.query(Change.date >= last_update)
-                ids = set()
-                for change in changes:
-                    ids.add(change.problem_id)
-                ids = list(ids)
-                if not ids:
-                    ids = []
+        # We store the time of the last edit operation in memcache. 
+        # This way, we don't need to read from datastore every time we poll. 
+        done = False
+        last_write = memcache.get('last_write')
+        if last_write is not None:
+            last_write = datetime.strptime(last_write, DATE_FORMAT)
+            if last_update > last_write:
                 date = str(datetime.now())
-                self.response.out.write(json.dumps({'ids': ids, 'date': date}))
-        else:
-            self.response.out.write(PROBLEM_COMMITTEE_ONLY)
+                self.response.out.write(json.dumps({'ids': [], 'date': date}))
+                done = True
 
-# Returns data about queried problem. 
-# Accessible only to problem committee. 
-class ProblemHandler(auth.BaseHandler):
-    @user_required
-    def get(self):
-        user_id = self.user_info()['user_id']
-        if problem_committee(user_id):
-            try:
-                problem_id = int(self.request.get('problem_id'))
-                index = (self.request.get('index') != '')
-            except:
-                self.abort(404)
-            if index:
-                problem = Problem.query(Problem.used == False).order(Problem.date).fetch(limit=1, offset=problem_id - 1)[0]
-            else:
-                problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
-            if not problem:
-                self.abort(404)
-            self.response.headers['Content-Type'] = 'application/json'
-            resp = {
-                'id': problem.key.id(),
-                'problem': problem.problem, 
-                'answer': problem.answer, 
-                'difficulty': problem.difficulty,
-                'tags': problem.tags, 
-                'author': problem.author, 
-                'comments': problem.comments
-            }
-            self.response.out.write(json.dumps(resp))
-        else:
-            self.response.out.write(PROBLEM_COMMITTEE_ONLY)
+        # If there were edits, return list of changes. 
+        if not done:
+            changes = Change.query(Change.date >= last_update)
+            ids = set()
+            for change in changes:
+                ids.add(change.problem_id)
+            ids = list(ids)
+            if not ids:
+                ids = []
+            date = str(datetime.now())
+            self.response.out.write(json.dumps({'ids': ids, 'date': date}))
 
 class RoundCreateHandler(auth.BaseHandler):
+    """ Handler for round creation. """
     @user_required
+    @problem_committee_required
     def get(self):
-        user_id = self.user_info()['user_id']
-        context = {
-            'problem_committee': problem_committee(user_id),
-        }
-        self.response.out.write(template.render('templates/add_round.html', context))
+        """ Returns round creation form. """
+        output = template.render('templates/add_round.html', {})
+        self.response.out.write(output)
 
     @user_required
+    @problem_committee_required
     def post(self):
-        user_id = self.user_info()['user_id']
-        if problem_committee(user_id):
-            round = Round(parent=ndb.Key('Rounds', 'default'))
-            round.name = self.request.get('name')
-            round.length = int(self.request.get('length'))
-            round.problems = [1] * round.length
-            round.put()
-        else:
-            self.response.out.write(PROBLEM_COMMITTEE_ONLY)
+        """ Saves new round. """
+        round = Round(parent=ndb.Key('Rounds', 'default'))
+        round.name = self.request.get('name')
+        round.length = int(self.request.get('length'))
+        round.problems = [1] * round.length
+        round.weights = [1] * round.length
+        round.year = self.request.get('year')
+        round.put()
 
 class RoundViewHandler(auth.BaseHandler):
+    """ Handler for viewing created rounds. """
     @user_required
+    @problem_committee_required
     def get(self):
-        user_id = self.user_info()['user_id']
+        """ Returns list of created rounds. """
         rounds = Round.query().order(Round.name)
         context = {
             'rounds': rounds,
-            'problem_committee': problem_committee(user_id),
         }
-        self.response.out.write(template.render('templates/view_rounds.html', context))
+        output = template.render('templates/view_rounds.html', context)
+        self.response.out.write(output)
 
 class RoundEditHandler(auth.BaseHandler):
+    """ Handler for editing rounds. """
     @user_required
+    @problem_committee_required
     def get(self):
-        user_id = self.user_info()['user_id']
+        """ Returns contents of round for modification. """
         try:
             round_id = int(self.request.get('round_id'))
-        except:
+        except ValueError:
             self.abort(404)
-        round = Round.get_by_id(round_id, parent=ndb.Key('Rounds', 'default'))
+        parent = ndb.Key('Rounds', 'default')
+        round = Round.get_by_id(round_id, parent=parent)
         if not round:
             self.abort(404)
 
         problems = []
         for problem_id in round.problems:
-            problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
+            parent = ndb.Key('Problems', 'default')
+            problem = Problem.get_by_id(problem_id, parent=parent)
             if problem:
                 problems.append((problem, True))
             else:
@@ -243,19 +315,22 @@ class RoundEditHandler(auth.BaseHandler):
         context = {
             'round': round, 
             'problems': problems,
-            'problem_committee': problem_committee(user_id)
+            'date': str(datetime.now())
         }
-        self.response.out.write(template.render('templates/edit_round.html', context))
+        output = template.render('templates/edit_round.html', context)
+        self.response.out.write(output)
 
     @user_required
+    @problem_committee_required
     def post(self):
-        user_id = self.user_info()['user_id']
+        """ Sets the problems of round with ID round_id to problems. """
         try:
             round_id = int(self.request.get('round_id'))
             problems = map(int, ast.literal_eval(self.request.get('problems')))
-        except:
+        except (ValueError, SyntaxError):
             self.abort(404)
-        round = Round.get_by_id(round_id, parent=ndb.Key('Rounds', 'default'))
+        parent = ndb.Key('Rounds', 'default')
+        round = Round.get_by_id(round_id, parent=parent)
         if not round:
             self.abort(404)
 
@@ -264,143 +339,42 @@ class RoundEditHandler(auth.BaseHandler):
         if not round:
             self.abort(404)
 
-EXPORT_HEADER = """\
-\\documentclass[12pt]{article}
+class CompileHandler(auth.BaseHandler):
+    """ Handler for compiling LaTeX. """
+    @user_required
+    @problem_committee_required
+    def get(self):
+        """ Compiles LaTeX in get request. """
+        doc = self.request.get('tex')
+        success, content_type, out = latex.to_pdf(doc)
 
-\\usepackage{amsmath,amssymb,amsthm}
-\\usepackage[pdftex]{graphicx}
-\\usepackage{asymptote}
-\\usepackage{listings}
-\\usepackage{hyperref}
-\\usepackage{xifthen}
-\\usepackage{color}
+        if not success:
+            self.response.out.write("Something's wrong! Here are the logs:\n\n")
+        self.response.headers['Content-Type'] = content_type
+        self.response.out.write(out)
 
-\\newcounter{c}
-\\newenvironment{problem}[1][]
-{
-  \\stepcounter{c}
-  \\begin{itemize}
-  \\item [\\thec.]
-  \\ifthenelse{\\isempty{#1}}
-  {\\newcommand{\\foot}{}}
-  {\\newcommand{\\foot}{\\\\ \\textbf{Answer:} #1}}
-}
-{
-  \\foot
-  \\end{itemize}
-  %\\vspace{1em}
-}
-
-\\begin{document}
-
-\\title{EMCC 2015: Problem Bank}
-\\maketitle
-
-"""
-
-# Creates tex from problem data. 
-def export(author=False):
-    doc = EXPORT_HEADER
-    if author:
-        problems = Problem.query(Problem.used == False).order(Problem.author).fetch(batch_size=100)
-        current_author = ''
-        for problem in problems:
-            if problem.author != current_author:
-                doc += '\\section{' + problem.author + '}\n\n'
-                current_author = problem.author
-            doc += '\\begin{problem}[' + problem.answer.rstrip('\n') + ']\n'
-            doc += '  ' + problem.problem + '\n'
-            doc += '\\end{problem}\n\n'
-        doc += '\\end{document}\n'
-    else:
-        problems = Problem.query(Problem.used == False).order(Problem.date).fetch(batch_size=100)
-        for problem in problems:
-            #doc += '\\begin{problem}[' + problem.answer.rstrip('\n') + ']\n'
-            doc += '\\begin{problem}\n'
-            doc += '  ' + problem.problem + ' (\emph{' + problem.author + '})\n'
-            doc += '\\end{problem}\n\n'
-        doc += '\\end{document}\n'
-    return doc
-
-# Exports all submitted problems as TeX, only accessible to problem committee. 
-class ExportHandler(auth.BaseHandler):
+class ProblemCommitteeHandler(auth.BaseHandler):
+    """ Handler for catching unauthorized accesses. """
     @user_required
     def get(self):
-        user_id = self.user_info()['user_id']
-        if problem_committee(user_id):
-            doc = export()
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write(doc)
-        else:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write(PROBLEM_COMMITTEE_ONLY)
-
-# Exports all submitted problems as a pdf, only accessible to problem committee. 
-class PdfHandler(auth.BaseHandler):
-    @user_required
-    def get(self):
-        user_id = self.user_info()['user_id']
-        if problem_committee(user_id):
-            doc = export()
-            success, out = latex.to_pdf(doc)
-            if success:
-                self.response.headers['Content-Type'] = 'application/pdf; charset=ISO-8859-1'
-                self.response.out.write(out)
-            else:
-                self.response.headers['Content-Type'] = 'text/plain'
-                self.response.out.write("Something's wrong! Here are the logs:\n\n")
-                self.response.out.write(out)
-        else:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write(PROBLEM_COMMITTEE_ONLY)
-
-# Soft deletes problem by setting 'used' to True. 
-class DeleteHandler(auth.BaseHandler):
-    @user_required
-    def get(self):
-        user_id = self.user_info()['user_id']
-        if problem_committee(user_id):
-            try:
-                problem_id = int(self.request.get('problem_id'))
-            except:
-                self.abort(404)
-            problem = Problem.get_by_id(problem_id, parent=ndb.Key('Problems', 'default'))
-            if not problem:
-                self.abort(404)
-            problem.used = True
-            problem.put()
-        self.redirect('/')
-
-# Main page (and problem submission page). 
-class MainPage(auth.BaseHandler):
-    @user_required
-    def get(self):
+        """ Returns "Problem Committee only" page. """
         user_id = self.user_info()['user_id']
         context = {
-            'problem_committee': problem_committee(user_id),
+            'not_problem_committee': user_id not in PROBLEM_COMMITTEE
         }
-        self.response.out.write(template.render('templates/index.html', context))
+        output = template.render('templates/problem_committee.html', context)
+        self.response.out.write(output)
 
-    @user_required
-    def post(self):
-        problem = Problem(parent=ndb.Key('Problems', 'default'))
-        problem.problem = self.request.get('problem')
-        problem.answer = self.request.get('answer')
-        problem.tags = self.request.get('tags').lower().split()
-        problem.difficulty = self.request.get('difficulty')
-        problem.author = self.user_info()['user_id']
-        problem.comments = ""
-        problem.put()
+def handle_404(request, response, exception):
+    """ Handler for 404 errors. """
+    output = template.render('templates/404.html', {})
+    response.out.write(output)
+    response.set_status(404)
 
 config = {}
 config['webapp2_extras.sessions'] = {
         'secret_key': 'hella_secret',
 }
-
-# Handler for 404 errors. 
-def handle_404(request, response, exception):
-    response.out.write(template.render('templates/404.html', {}))
-    response.set_status(404)
 
 application = webapp2.WSGIApplication(
     [
@@ -413,8 +387,8 @@ application = webapp2.WSGIApplication(
         ('/add_round', RoundCreateHandler),
         ('/view_rounds', RoundViewHandler),
         ('/edit_round', RoundEditHandler),
-        ('/export', ExportHandler),
-        ('/pdf', PdfHandler),
+        ('/compile', CompileHandler),
+        ('/problem_committee', ProblemCommitteeHandler),
         ('/login', auth.LoginHandler),
         ('/logout', auth.LogoutHandler),
     ], 

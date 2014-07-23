@@ -1,6 +1,7 @@
+""" Authentication for GAE. """
+
 import webapp2
 import login
-import os
 import json
 
 from webapp2_extras import sessions
@@ -10,12 +11,13 @@ from google.appengine.ext.webapp import template
 # From https://github.com/OnlineHarkness/app/tree/master/handlers .
 
 class BaseHandler(webapp2.RequestHandler):
+    """ RequestHandler that supports user authentication. """
     @webapp2.cached_property
     def auth(self):
         return auth.get_auth()
 
     def dispatch(self):
-        # Get a session store for this request.
+        """ Get a session store for this request. """
         self.session_store = sessions.get_store(request=self.request)
 
         try:
@@ -27,17 +29,21 @@ class BaseHandler(webapp2.RequestHandler):
 
     @webapp2.cached_property
     def session(self):
-        # Returns a session using the default cookie key.
+        """ Returns a session using the default cookie key. """
         return self.session_store.get_session()
 
     def user_info(self):
+        """ Returns user info for current session. """
         return self.auth.get_user_by_session()
 
 class LoginHandler(BaseHandler):
+    """ Handler for logging in. """
     def get(self):
+        """ Displays login page. """
         self.response.out.write(template.render('templates/login.html', {}))
 
     def post(self):
+        """ Logs in user. """
         username = self.request.get('username')
         password = self.request.get('password')
 
@@ -62,6 +68,8 @@ class LoginHandler(BaseHandler):
         self.redirect('/')
 
 class LogoutHandler(BaseHandler):
+    """ Handler for logging out. """
     def get(self):
+        """ Redirects to login. """
         self.auth.unset_session()
-        self.redirect('/')
+        self.redirect('/login')

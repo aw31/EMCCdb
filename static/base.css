@@ -36,6 +36,13 @@
   margin-bottom: 10px;
 }
 
+span.btn, .btn-secondary {
+  background-color: #fff;
+  border-width: 1px;
+  border-color: #aaa;
+  padding-bottom: 2px;
+}
+
 .status-message {
   padding: 10px;
 }

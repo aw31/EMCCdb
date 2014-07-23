@@ -22,15 +22,15 @@ function renumber(){
 var delete_button = ' <button class="btn btn-xs btn-secondary delete">' +
                     '<span class="glyphicon glyphicon-remove"></span></button>' +
                     '<span>&zwnj;</span>';
-var id_form = '<form class="add-form">' +
+var id_form = '<form class="add-form problem">' +
               '<input type="text" class="form-control" name="id" ' + 
               'placeholder="Problem ID"></input></form>';
 var del_open = 'Deleted. <a href="javascript:void(0)" class="undo" id="';
 var del_close = '">Undo?</a>';
 var tag_div_open = '<div class="tags">&nbsp;';
 var tag_div_close = '</div>';
-var tag_open = '<span class="btn btn-primary btn-xs">';
-var tag_close = '</span> ';
+var tag_open = '<span class="btn btn-xs tag">';
+var tag_close = '</span>';
 
 function getTeX(){
   // returns round -> TeX

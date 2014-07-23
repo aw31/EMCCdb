@@ -41,16 +41,20 @@
               {{ problem.problem }}
             </div>
             <div class="tags">&nbsp;
-              <span class="btn btn-primary btn-xs">{{ problem.author }}</span>
-              <span class="btn btn-primary btn-xs">{{ problem.difficulty }}</span>
+              <span class="btn btn-xs">{{ problem.author }}</span>
+              {% if problem.difficulty %}
+                <span class="btn btn-xs">{{ problem.difficulty }}</span>
+              {% else %}
+                <span class="btn btn-xs">?</span>
+              {% endif %}
               {% for tag in problem.tags %}
-                <span class="btn btn-primary btn-xs">{{ tag }}</span>
+                <span class="btn btn-xs">{{ tag }}</span>
               {% endfor %}
             </div>
           </td>
         {% else %}
           <td>
-            <form class="add-form">
+            <form class="add-form problem" id="1">
               <input type="text" class="form-control" name="id" placeholder="Problem ID"></input>
             </form>
           </td>

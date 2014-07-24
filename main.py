@@ -306,14 +306,14 @@ class RoundEditHandler(auth.BaseHandler):
         problems = []
         for problem_id in round.problems:
             parent = ndb.Key('Problems', 'default')
-            problem = Problem.get_by_id(problem_id, parent=parent)
-            if problem:
-                problems.append((problem, True))
+            if problem_id == 1:
+                problems.append(None)
             else:
-                problems.append((None, False))
+                problem = Problem.get_by_id(problem_id, parent=parent)
+                problems.append(problem)
 
         context = {
-            'round': round, 
+            'round': round,
             'problems': problems,
             'date': str(datetime.now())
         }

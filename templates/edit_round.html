@@ -13,12 +13,12 @@
     <col width="42">
     <thead>
       <tr>
-        <td>#&nbsp;&nbsp;</td>
-        <td>Problems&nbsp;&nbsp;</td>
+        <td>#</td>
+        <td>Problems</td>
       </tr>
     </thead>
     <tbody id="round-body">
-      {% for problem, exist in problems %}
+      {% for problem in problems %}
       <tr>
         <td class="handle">
           <span class="grip-wrapper">
@@ -29,18 +29,19 @@
           <a class="prob-link" href="javascript:void(0)">
             <span class="counter pull-right">{{ forloop.counter }}</span>
           </a>
-          {% if exist %}
+          {% if problem %}
             <pre class="raw" hidden>{{ problem.problem }}</pre>
           {% else %}
             <pre class="raw" hidden></pre>
           {% endif %}
         </td>
-        {% if exist %}
+        {% if problem %}
           <td>
             <div class="problem" id="{{ problem.key.id }}">
               {{ problem.problem }}
             </div>
-            <div class="tags">&nbsp;
+            <hr>
+            <div class="tags">
               <span class="btn btn-xs">{{ problem.author }}</span>
               {% if problem.difficulty %}
                 <span class="btn btn-xs">{{ problem.difficulty }}</span>

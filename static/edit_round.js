@@ -22,12 +22,12 @@ function renumber(){
 var delete_button = ' <button class="btn btn-xs btn-secondary delete">' +
                     '<span class="glyphicon glyphicon-remove"></span></button>' +
                     '<span>&zwnj;</span>';
-var id_form = '<form class="add-form problem">' +
+var id_form = '<form class="add-form problem" id="1">' +
               '<input type="text" class="form-control" name="id" ' + 
               'placeholder="Problem ID"></input></form>';
 var del_open = 'Deleted. <a href="javascript:void(0)" class="undo" id="';
 var del_close = '">Undo?</a>';
-var tag_div_open = '<div class="tags">&nbsp;';
+var tag_div_open = '<hr><div class="tags">';
 var tag_div_close = '</div>';
 var tag_open = '<span class="btn btn-xs tag">';
 var tag_close = '</span>';
@@ -47,12 +47,11 @@ function make_tag(tag){
   return tag_open + tag + tag_close;
 }
 
-function undo(del_row, del_id){
-  // undoes delete by adding problem with id del_id to row del_row
-  $.get('get_problem?problem_id=' + del_id, function(r){
-    var row = $('#round-body tr:nth-child(' + del_row + ')');
+function set(row_id, id, index){
+  var row = $('#round-body tr:nth-child(' + row_id + ')');
+  $.get('get_problem?problem_id=' + id + index, function(r){
     row.find('.raw').html(r.problem);
-    var div_open = '<div class="problem" id="' + del_id + '">';
+    var div_open = '<div class="problem" id="' + r.id + '">';
     var div_close = delete_button + '</div>';
     var prob = div_open + latex_to_HTML(r.problem) + div_close;
     var tags = ''
@@ -62,6 +61,8 @@ function undo(del_row, del_id){
       tags += make_tag(r.tags[i]);
     }
     prob += tag_div_open + tags + tag_div_close;
+    row.find('input').attr('disabled', false);
+    row.find('input').val('');
     row.find('td:nth-child(2)').html(prob);
     $('body').addClass('changed');
     MathJax.Hub.Queue(
@@ -69,7 +70,14 @@ function undo(del_row, del_id){
     );
   }).fail(function(){
     addStatus('Oops, the ID is invalid.', 'alert-danger');
+    console.log(row);
+    row.find('input').attr('disabled', false);
   });
+}
+
+function undo(del_row, del_id){
+  // undoes delete by adding problem with id del_id to row del_row
+  set(del_row, del_id, '');
 }
 
 $(document).ready(function(){
@@ -93,12 +101,12 @@ $(document).ready(function(){
     }
   });
 
-  $(document).on('mouseenter', '.problem', function(){
+  $(document).on('mouseenter', 'td', function(){
     // shows delete button on mouseenter
     $(this).find('button').show();
   });
 
-  $(document).on('mouseleave', '.problem', function(){
+  $(document).on('mouseleave', 'td', function(){
     // hides delete button on mouseleave
     $(this).find('button').hide();
   });
@@ -115,12 +123,13 @@ $(document).ready(function(){
     var div = $(this).parent();
     var row = div.parent().parent();
     var id = div.attr('id');
-    var index = row.find('.counter').html();
+    var row_id = row.find('.counter').html();
     div.attr('id', '1');
     div.parent().html(id_form);
     row.find('.raw').html('');
     $('body').addClass('changed');
-    addStatus(del_open + index + ' ' + id + del_close, 'alert-success', 5000);
+    console.log(id);
+    addStatus(del_open + row_id + ' ' + id + del_close, 'alert-success', 5000);
   });
 
   $(document).on('click', '.prob-link', function(){
@@ -138,31 +147,9 @@ $(document).ready(function(){
     // adds problem to round
     var id = $(this).find('input').val();
     var form = $(this);
-    $.get('get_problem?problem_id=' + id + '&index=true', function(r){
-      var row = form.parent().parent();
-      row.find('.raw').html(r.problem);
-      form.find('input').prop('disabled', false);
-      form.find('input').val('');
-      var div_open = '<div class="problem" id="' + r.id + '">';
-      var div_close = delete_button + '</div>';
-      var prob = div_open + latex_to_HTML(r.problem) + div_close;
-      var tags = ''
-      tags += make_tag(r.author);
-      tags += make_tag(r.difficulty);
-      for(var i = 0; i < r.tags.length; i++){
-        tags += make_tag(r.tags[i]);
-      }
-      prob += tag_div_open + tags + tag_div_close;
-      form.parent().html(prob);
-      $('body').addClass('changed');
-      MathJax.Hub.Queue(
-        ["Typeset", MathJax.Hub]
-      );
-    }).fail(function(){
-      var form = $('#' + form_id);
-      form.find('input').prop('disabled', false);
-      addStatus('Oops, the ID is invalid.', 'alert-danger');
-    });
+    var row = form.parent().parent();
+    var row_id = row.find('.counter').html();
+    set(row_id, id, '&index=true');
     $(this).find('input').prop('disabled', true);
     e.preventDefault();
   });
@@ -238,7 +225,8 @@ function update() {
 
 setInterval(update, 5000);
 
-var template_open = "\\documentclass[12pt]{book}\n \
+var template_open = " \
+\\documentclass[12pt]{book}\n \
 \\usepackage{amsmath, amssymb, amsthm}\n \
 \\usepackage{versions}\n \
 \\usepackage{graphicx}\n \

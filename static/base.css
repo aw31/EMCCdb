@@ -28,8 +28,12 @@ hr {
   margin: 6px 0;
 }
 
-.problem>button {
-  font-size: 0.6em;
+.problem {
+  padding-bottom: 2px;
+}
+
+.problem > button {
+  font-size: 0.5em;
 }
 
 .problem-form {
@@ -40,12 +44,13 @@ hr {
   margin-bottom: 10px;
 }
 
-span.btn, .btn-secondary {
+span.btn.disabled.tag, .delete {
   background-color: #fff;
   border-width: 1px;
   border-color: #aaa;
   padding-bottom: 2px;
   padding-top: 2px;
+  opacity: 1;
 }
 
 .status-message {
@@ -61,6 +66,7 @@ span.btn, .btn-secondary {
   top: 70px;
   left: 0px;
   width: 100%;
+  z-index: 9001;
 }
 
 .tag {
@@ -114,13 +120,19 @@ span.btn, .btn-secondary {
   background-color: #888;
 }
 
+.handle {
+  position: relative;
+}
+
 .grip-wrapper {
   margin-left: -4px;
   display: inline-block;
-  line-height: 0px;
+  line-height: 0;
   cursor: grabbing;
   position: absolute;
-  height: 100%;
+  padding-top: 9px;
+  top: 0;
+  bottom: 0;
 }
 
 .counter {

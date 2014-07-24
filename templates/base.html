@@ -64,9 +64,14 @@
 
       function addStatus(message, style, time){
         time = (typeof time == 'undefined' ? 2000 : time);
-        var status = '<h4 align="center" class="status"><span class="label status-message ';
+        var id = Math.floor((Math.random() * 10000) + 1); 
+        var status = '<h4 align="center" class="status" id="' + 
+                     id + '"><span class="label status-message ';
         status += style + '">' + message + '</span></h4>';
-        $(status).appendTo('#status_wrapper').delay(time).fadeOut('slow');
+        $(status).appendTo('#status_wrapper');
+        setTimeout(function(){
+          $('#' + id).fadeOut('slow')
+        }, time);
       }
     </script>
 

@@ -1,5 +1,18 @@
 'use strict';
 
+var delete_button = ' <button class="btn btn-xs btn-secondary delete">' +
+                    '<span class="glyphicon glyphicon-remove"></span></button>' +
+                    '<span>&zwnj;</span>';
+var id_form = '<form class="add-form problem" id="1">' +
+              '<input type="text" class="form-control" name="id" ' + 
+              'placeholder="Problem ID" /></form>';
+var del_open = 'Deleted. <a href="javascript:void(0)" class="undo" id="';
+var del_close = '">Undo?</a>';
+var tag_div_open = '<hr><div class="tags">';
+var tag_div_close = '</div>';
+var tag_open = '<span class="btn btn-xs disabled tag">';
+var tag_close = '</span>';
+
 function renumber(){
   // renumbers problems during dragging
   var i = 0, drag_i;
@@ -19,18 +32,28 @@ function renumber(){
   });
 }
 
-var delete_button = ' <button class="btn btn-xs btn-secondary delete">' +
-                    '<span class="glyphicon glyphicon-remove"></span></button>' +
-                    '<span>&zwnj;</span>';
-var id_form = '<form class="add-form problem" id="1">' +
-              '<input type="text" class="form-control" name="id" ' + 
-              'placeholder="Problem ID"></input></form>';
-var del_open = 'Deleted. <a href="javascript:void(0)" class="undo" id="';
-var del_close = '">Undo?</a>';
-var tag_div_open = '<hr><div class="tags">';
-var tag_div_close = '</div>';
-var tag_open = '<span class="btn btn-xs tag">';
-var tag_close = '</span>';
+function save(){
+  // saves round
+  var problems = [];
+  $('.problem').each(function(){
+    problems.push($(this).attr('id'));
+  });
+  $.ajax({
+    type: 'POST',
+    url: '/edit_round',
+    data: {
+      problems: JSON.stringify(problems),
+      round_id: round_id
+    },
+    success: function(){
+      addStatus('Saved!', 'alert-success');
+      $('body').removeClass('changed');
+    },
+    error: function(){
+      addStatus('Oops, an error occurred.', 'alert-danger');
+    }
+  });
+}
 
 function getTeX(){
   // returns round -> TeX
@@ -43,11 +66,14 @@ function getTeX(){
 }
 
 function make_tag(tag){
+  // returns a tag element containing 'tag'
   if(tag.length === 0) return tag_open + '?' + tag_close;
   return tag_open + tag + tag_close;
 }
 
 function set(row_id, id, index){
+  // sets row with id row_id to problem with id id
+  // index determines whether we use short or long id
   var row = $('#round-body tr:nth-child(' + row_id + ')');
   $.get('get_problem?problem_id=' + id + index, function(r){
     row.find('.raw').html(r.problem);
@@ -114,7 +140,7 @@ $(document).ready(function(){
   $(document).on('click', '.undo', function(){
     // calls undo, fades delete status
     var params = $(this).attr('id').split(' ');
-    $(this).parent().delay(500).fadeOut('slow');
+    $(this).parent().parent().fadeOut('slow');
     undo(params[0], params[1]);
   });
 
@@ -128,7 +154,6 @@ $(document).ready(function(){
     div.parent().html(id_form);
     row.find('.raw').html('');
     $('body').addClass('changed');
-    console.log(id);
     addStatus(del_open + row_id + ' ' + id + del_close, 'alert-success', 5000);
   });
 
@@ -168,26 +193,8 @@ $(document).ready(function(){
   });
 
   $('#save').click(function(){
-    // saves round
-    var problems = [];
-    $('.problem').each(function(){
-      problems.push($(this).attr('id'));
-    });
-    $.ajax({
-      type: 'POST',
-      url: '/edit_round',
-      data: {
-        problems: JSON.stringify(problems),
-        round_id: round_id
-      },
-      success: function(){
-        addStatus('Saved!', 'alert-success');
-        $('body').removeClass('changed');
-      },
-      error: function(){
-        addStatus('Oops, an error occurred.', 'alert-danger');
-      }
-    });
+    // calls save...
+    save();
   });
 });
 
@@ -225,99 +232,15 @@ function update() {
 
 setInterval(update, 5000);
 
-var template_open = " \
-\\documentclass[12pt]{book}\n \
-\\usepackage{amsmath, amssymb, amsthm}\n \
-\\usepackage{versions}\n \
-\\usepackage{graphicx}\n \
-\\usepackage{hyperref}\n \
-\\usepackage{epstopdf}\n \
-\\usepackage{calc}\n \
-\\theoremstyle{definition}\n \
-\\newtheorem*{sol*}{Solution}\n \
-\\newcommand{\\emccyear}[1]{\\newcommand{\\printyear}{#1}}\n \
-\\newcommand{\\emccdate}[1]{\\newcommand{\\printdate}{#1}}\n \
-\\newcommand{\\acknowledge}[2]{\\item{\\em{\\bf #1}} \\quad #2}\n \
-\\newcommand{\\smallemcclogo}{\\begin{center} \\includegraphics{../include/emcclogo} \\end{center}}\n \
-\\newcommand{\\bigemcclogo}{\\begin{center} \\includegraphics{../include/emcclogolarge} \\end{center}}\n \
-\\newcommand{\\appendnote}[1]{\\vspace{6pt} \\\\ Note: #1}\n \
-\\newcommand{\\altsol}{\\vspace{6pt} {\\bf Alternate solution:} }\n \
-\\newcommand{\\dg}{^{\\circ}}\n \
-\\newcommand{\\points}[1]{\n \
-\\processifversion{alltest}{{[}#1{]}}\n \
-\\processifversion{solotest}{{[}#1{]}}\n \
-\\processifversion{ans}{}\n \
-\\processifversion{sol}{}\n \
-}\n \
-\\newcommand{\\problem}[1]{\n \
-\\processifversion{alltest}{\\item #1}\n \
-\\processifversion{solotest}{\\item #1}\n \
-\\processifversion{ans}{}\n \
-\\processifversion{sol}{\\item #1}\n \
-}\n \
-\\newcommand{\\solution}[2]{\n \
-\\processifversion{alltest}{}\n \
-\\processifversion{solotest}{}\n \
-\\processifversion{sol}{\\begin{sol*}The answer is \\fbox{#1}. \\\\ \\\\ #2 \\end{sol*} }\n \
-\\processifversion{ans}{\\item #1}\n \
-}\n \
-\\newcommand{\\gutsround}[1]{\n \
-\\processifversion{alltest}{\\subsection{Round #1}}\n \
-\\processifversion{solotest}{\\subsection*{Round #1}}\n \
-\\processifversion{ans}{\\subsection*{Round #1}}\n \
-\\processifversion{sol}{\\subsection{Round #1}}\n \
-}\n \
-\\newcommand{\\gutsendround}{\n \
-\\processifversion{alltest}{\\smallemcclogo}\n \
-\\processifversion{solotest}{\\rule{\\linewidth-\\textwidth}{0.4pt} \\rule{\\textwidth}{0.4pt} }\n \
-\\processifversion{ans}{}\n \
-\\processifversion{sol}{}\n \
-}\n \
-\\newcommand{\\gutspagebreak}{\n \
-\\processifversion{alltest}{}\n \
-\\processifversion{solotest}{\\newpage}\n \
-\\processifversion{ans}{}\n \
-\\processifversion{sol}{}\n \
-}\n \
-\\newcommand{\\specialmessage}[1]{\n \
-\\processifversion{alltest}{#1}\n \
-\\processifversion{solotest}{#1}\n \
-\\processifversion{ans}{}\n \
-\\processifversion{sol}{#1}\n \
-}\n \
-\\emccyear{" + round_year + "}\n \
-\\emccdate{January 31, 2015}\n \
-\\setlength{\\textheight}{8in}\n \
-\\setlength{\\textwidth}{6.5in}\n \
-\\setlength{\\topmargin}{0.0in}\n \
-\\setlength{\\headheight}{0.5in}\n \
-\\setlength{\\headsep}{0.3in}\n \
-\\setlength{\\oddsidemargin}{-0.2in}\n \
-\\setlength{\\evensidemargin}{-0.2in}\n \
-\\setlength{\\parindent}{1pc}\n \
-\\usepackage{fancyhdr}\n \
-\\usepackage{lastpage}\n \
-\\pagestyle{fancy}\n \
-\\lhead{" + round_name + "}\n \
-\\chead{\\sl Exeter Math Club Competition \\printyear\\ }\n \
-\\rhead{page \\thepage\\ of \\pageref{LastPage}}\n \
-\\lfoot{}\n \
-\\cfoot{}\n \
-\\rfoot{}\n \
-\\begin{document}\n \
-\\excludeversion{alltest}\n \
-\\includeversion{solotest}\n \
-\\excludeversion{sol}\n \
-\\excludeversion{ans}\n \
-{\\LARGE {\\bf " + round_name + "}}\n \
-\\begin{flushright}\n \
-{\\bf \\printdate\\ }\n \
-\\end{flushright}\n \
-\n \
-{\\em \\noindent There are ?? problems, worth ?? points each, to be solved in ?? minutes. Answer each question to the best of your ability. Answers must be simplified and exact unless otherwise specified. There is no penalty for guessing. Be careful and don't rush.}\n \
-\n \
-\\begin{enumerate}\n";
+$(window).bind('keydown', function(event) {
+  // catches CTRL + s to save
+  if (event.ctrlKey || event.metaKey) {
+    switch (String.fromCharCode(event.which).toLowerCase()) {
+      case 's':
+        event.preventDefault();
+        save();
+        break;
+    }
+  }
+});
 
-var template_close = '\\end{enumerate}\n \
-\n \
-\\end{document}';

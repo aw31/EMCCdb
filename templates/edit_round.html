@@ -42,21 +42,13 @@
             </div>
             <hr>
             <div class="tags">
-              <span class="btn btn-xs">{{ problem.author }}</span>
-              {% if problem.difficulty %}
-                <span class="btn btn-xs">{{ problem.difficulty }}</span>
-              {% else %}
-                <span class="btn btn-xs">?</span>
-              {% endif %}
-              {% for tag in problem.tags %}
-                <span class="btn btn-xs">{{ tag }}</span>
-              {% endfor %}
+              <span class="btn btn-xs disabled tag">{{ problem.author }}</span>{% if problem.difficulty %}<span class="btn btn-xs disabled tag">{{ problem.difficulty }}</span>{% else %}<span class="btn btn-xs disabled">?</span>{% endif %}{% for tag in problem.tags %}<span class="btn btn-xs disabled tag">{{ tag }}</span>{% endfor %}
             </div>
           </td>
         {% else %}
           <td>
             <form class="add-form problem" id="1">
-              <input type="text" class="form-control" name="id" placeholder="Problem ID"></input>
+              <input type="text" class="form-control" name="id" placeholder="Problem ID" />
             </form>
           </td>
         {% endif %}
@@ -79,5 +71,6 @@
     var last_update = "{{ date }}";
   </script>
   <script src="static/edit_round.js"></script>
+  <script src="static/latex_template.js"></script>
 {% endblock %}
 

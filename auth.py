@@ -3,7 +3,7 @@
 import webapp2
 import login
 import json
-from urlparse import urlparse, parse_qs
+from urlparse import urlsplit, parse_qs
 
 from webapp2_extras import sessions
 from webapp2_extras import auth
@@ -67,8 +67,8 @@ class LoginHandler(BaseHandler):
             }))
 
         # We redirect if argument is present in url.
-        url = urlparse(self.request.url)
-        query = parse_qs(url[4])
+        url = urlsplit(self.request.url)
+        query = parse_qs(url[3])
         if 'url' in query:
             redirect = query['url'][0]
         else:

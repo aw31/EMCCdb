@@ -4,6 +4,7 @@ import webapp2
 import ast
 import json
 from datetime import datetime
+from urlparse import urlparse
 
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
@@ -18,7 +19,8 @@ def user_required(handler):
     def check_login(self, *args, **kwargs):
         """ Redirects user to login if not logged in. """
         if not self.user_info():
-            self.redirect('/login', abort=True)
+            url = urlparse(self.request.url)
+            self.redirect('/login?url=' + url[2], abort=True)
         else:
             return handler(self, *args, **kwargs)
 

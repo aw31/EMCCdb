@@ -2,14 +2,13 @@
 // this assumes that the user does not randomly throw around '{' and '}'
 // TODO: write something more robust
 function latex_to_HTML(str){
-  // replace all '<' and '>' with appropriate codes
-  str = str.replace('<', '&lt;');
-  str = str.replace('>', '&gt;');
+  str = str.replace('\\{', '\uFFFC');
+  str = str.replace('\\}', '\uFFFD');
 
-  var token = ["\\emph{", "\\textbf{", "\\textit{", "\\underline{"];
-  var html = ["em", "b", "i", "u"];
+  var token = ['\\emph{', '\\textbf{', '\\textit{', '\\underline{'];
+  var html = ['em', 'b', 'i', 'u'];
   var seen = [], index = [];
-  var res = "";
+  var res = '';
   var len = str.length;
   for(var i = 0; i < len; i++){
     if(str.charAt(i) == '{' && str.charAt(i - 1) != '\\'){
@@ -21,13 +20,13 @@ function latex_to_HTML(str){
       if(seen[seen.length - 1].length > 0){
         res =
           res.slice(0, index[index.length - 1]) +
-          "<" + seen[seen.length - 1] + ">" +
+          '<' + seen[seen.length - 1] + '>' +
           res.slice(index[index.length - 1]) +
-          "</" + seen[seen.length - 1] + ">";
+          '</' + seen[seen.length - 1] + '>';
       } else {
         res =
           res.slice(0, index[index.length - 1]) +
-          "{" + res.slice(index[index.length - 1]) + "}";
+          '{' + res.slice(index[index.length - 1]) + '}';
       }
       seen.pop();
       index.pop();
@@ -57,6 +56,9 @@ function latex_to_HTML(str){
       res += str.charAt(i);
     }
   }
+
+  res = res.replace('\uFFFC', '\\{');
+  res = res.replace('\uFFFD', '\\}');
   return res;
 }
 

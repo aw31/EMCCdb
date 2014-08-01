@@ -4,50 +4,51 @@
   line-height: 2em;
 }
 
-.ans-div {
-  min-height: 2.1em;
+.ans-div { min-height: 2.1em; }
+
+.comment { white-space: pre-wrap; }
+
+.counter { margin-right: -2px; }
+
+.delete { display: none; }
+
+#filtered { padding: 0; min-height: 42px; }
+
+#filtered>.tag { margin: 10px 2px 10px 8px; }
+
+.grip {
+  display: inline-block;
+  width: 12px;
+  height: 1px;
+  background-color: #888;
 }
 
-.comment {
-  white-space: pre-wrap;
+.grip-wrapper {
+  margin-left: -4px;
+  margin-bottom: -99999px;
+  padding-bottom: 99999px;
+  display: inline-block;
+  line-height: 0;
+  font-size: 0.9em;
+  cursor: grabbing;
 }
 
-.delete {
-  display: none;
-}
+.handle { overflow: hidden; }
 
-#filtered {
-  padding: 0; min-height: 42px;
-}
-
-#filtered>.tag {
-  margin: 10px 2px 10px 8px;
-}
-
-hr {
-  margin: 6px 0;
-}
+hr { margin: 6px 0; }
 
 #login {
   max-width: 320px;
   margin-bottom: 30px;
 }
 
-.problem {
-  padding-bottom: 2px;
-}
+.problem { padding-bottom: 2px; }
 
-.problem > button {
-  font-size: 0.5em;
-}
+.problem > button { font-size: 0.5em; }
 
-.problem-form {
-  max-width: 500px;
-}
+.problem-form { max-width: 500px; }
 
-.round-edit-toolbar {
-  margin-bottom: 10px;
-}
+.round-edit-toolbar { margin-bottom: 10px; }
 
 span.btn.disabled.tag, .delete {
   background-color: #fff;
@@ -58,13 +59,9 @@ span.btn.disabled.tag, .delete {
   opacity: 1;
 }
 
-.status-message {
-  padding: 10px;
-}
+.status-message { padding: 10px; }
 
-.status {
-  padding: 6px;
-}
+.status { padding: 6px; }
 
 #status_wrapper {
   position: fixed;
@@ -74,17 +71,11 @@ span.btn.disabled.tag, .delete {
   z-index: 9001;
 }
 
-.tag {
-  margin: 2px;
-}
+.tag { margin: 2px; } 
 
-.tag-cell {
-  line-height:1.6em
-}
+.tag-cell { line-height:1.6em }
 
-.tags {
-  margin-top: 4px;
-}
+.tags { margin-top: 4px; }
 
 /* stolen from http://johnny.github.io/jquery-sortable/css/application.css */
 .sorted_table tr.placeholder {
@@ -118,28 +109,3 @@ span.btn.disabled.tag, .delete {
   display: none;
 }
 
-.grip {
-  display: inline-block;
-  width: 12px;
-  height: 2px;
-  background-color: #888;
-}
-
-.handle {
-  position: relative;
-}
-
-.grip-wrapper {
-  margin-left: -4px;
-  display: inline-block;
-  line-height: 0;
-  cursor: grabbing;
-  position: absolute;
-  padding-top: 9px;
-  top: 0;
-  bottom: 0;
-}
-
-.counter {
-  margin-right: -4px;
-}

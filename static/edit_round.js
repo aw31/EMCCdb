@@ -140,7 +140,7 @@ $(document).ready(function(){
   $(document).on('click', '.undo', function(){
     // calls undo, fades delete status
     var params = $(this).attr('id').split(' ');
-    $(this).parent().parent().fadeOut('slow');
+    $(this).parent().parent().delay(500).fadeOut('slow');
     undo(params[0], params[1]);
   });
 

@@ -41,6 +41,8 @@ class LoginHandler(BaseHandler):
     """ Handler for logging in. """
     def get(self):
         """ Displays login page. """
+        if self.request.get('url'):
+            self.error(401)
         self.response.out.write(template.render('templates/login.html', {}))
 
     def post(self):

@@ -36,7 +36,7 @@ def problem_committee_required(handler):
         """ Redirects user to problem_committee if not in problem committee. """
         user_id = self.user_info()['user_id']
         if not user_id in PROBLEM_COMMITTEE:
-            self.redirect('/problem_committee', abort=True)
+            self.redirect('/problem_committee', abort=True, code=401)
         else:
             return handler(self, *args, **kwargs)
 

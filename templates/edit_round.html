@@ -43,7 +43,15 @@
             </div>
             <hr>
             <div class="tags">
-              <span class="btn btn-xs disabled tag">{{ problem.author }}</span>{% if problem.difficulty %}<span class="btn btn-xs disabled tag">{{ problem.difficulty }}</span>{% else %}<span class="btn btn-xs disabled">?</span>{% endif %}{% for tag in problem.tags %}<span class="btn btn-xs disabled tag">{{ tag }}</span>{% endfor %}
+              <span class="btn btn-xs disabled tag">{{ problem.author }}</span>
+              {% if problem.difficulty %}
+                <span class="btn btn-xs disabled tag">{{ problem.difficulty }}</span>
+              {% else %}
+                <span class="btn btn-xs disabled tag">?</span>
+              {% endif %}
+              {% for tag in problem.tags %}
+                <span class="btn btn-xs disabled tag">{{ tag }}</span>
+              {% endfor %}
             </div>
           </td>
         {% else %}

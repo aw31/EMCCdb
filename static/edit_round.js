@@ -2,7 +2,7 @@
 
 var delete_button = ' <button class="btn btn-xs btn-secondary delete">' +
                     '<span class="glyphicon glyphicon-remove"></span></button>' +
-                    '<span>&zwnj;</span>';
+                    '<span>&zwnj;</span><span class="placeholder"></span>';
 var id_form = '<form class="add-form problem" id="1">' +
               '<input type="text" class="form-control" name="id" ' + 
               'placeholder="Problem ID" /></form>';
@@ -96,7 +96,6 @@ function set(row_id, id, index){
     );
   }).fail(function(){
     addStatus('Oops, the ID is invalid.', 'alert-danger');
-    console.log(row);
     row.find('input').attr('disabled', false);
   });
 }
@@ -129,12 +128,14 @@ $(document).ready(function(){
 
   $(document).on('mouseenter', 'td', function(){
     // shows delete button on mouseenter
-    $(this).find('button').show();
+    $(this).find('.delete').show();
+    $(this).find('.placeholder').hide();
   });
 
   $(document).on('mouseleave', 'td', function(){
     // hides delete button on mouseleave
-    $(this).find('button').hide();
+    $(this).find('.delete').hide();
+    $(this).find('.placeholder').show();
   });
 
   $(document).on('click', '.undo', function(){
@@ -157,8 +158,9 @@ $(document).ready(function(){
     addStatus(del_open + row_id + ' ' + id + del_close, 'alert-success', 5000);
   });
 
-  $(document).on('click', '.prob-link', function(){
+  $(document).on('click', '.prob-link', function(e){
     // if problem is not empty, opens edit in new tab
+    e.preventDefault();
     var row = $(this).parent().parent();
     var id = row.find('.problem').attr('id');
     var index = row.find('.counter').html();
@@ -212,6 +214,13 @@ function update_problem(id){
     $('#' + id).html(latex_to_HTML(r.problem) + delete_button);
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     $('#' + id).parent().find('.raw').html(r.problem);
+    var tags = ''
+    tags += make_tag(r.author);
+    tags += make_tag(r.difficulty);
+    for(var i = 0; i < r.tags.length; i++){
+      tags += make_tag(r.tags[i]);
+    }
+    $('#' + id).parent().find('.tags').html(tags);
   });
 }
 

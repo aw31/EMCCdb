@@ -2,8 +2,9 @@
 // this assumes that the user does not randomly throw around '{' and '}'
 // TODO: write something more robust
 function latex_to_HTML(str){
-  str = str.replace('\\{', '\uFFFC');
-  str = str.replace('\\}', '\uFFFD');
+  str = str.split('\\\\').join('<br>');
+  str = str.split('\\{').join('\uFFFC');
+  str = str.split('\\}').join('\uFFFD');
 
   var token = ['\\emph{', '\\textbf{', '\\textit{', '\\underline{'];
   var html = ['em', 'b', 'i', 'u'];
@@ -57,8 +58,8 @@ function latex_to_HTML(str){
     }
   }
 
-  res = res.replace('\uFFFC', '\\{');
-  res = res.replace('\uFFFD', '\\}');
+  res = res.split('\uFFFC').join('\\{');
+  res = res.split('\uFFFD').join('\\}');
   return res;
 }
 

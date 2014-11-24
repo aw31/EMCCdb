@@ -8,6 +8,8 @@
       <h3 class="panel-title">Preview</h3>
     </div>
     <div class="panel-body" id="preview"></div>
+    <hr class="preview">
+    <div class="panel-body" id="solution-preview"></div>
   </div>
   <form id ="edit-form" class="form problem-form">
     <div class="form-group">
@@ -17,6 +19,10 @@
     <div class="form-group">
       <label>Answer</label>
       <input type="text" class="form-control" name="answer" value="{{ problem.answer }}">
+    </div>
+    <div class="form-group">
+      <label>Solution</label>
+      <textarea class="form-control" name="solution" rows="5" id="solution">{{ problem.solution }}</textarea>
     </div>
     <div class="form-group">
       <label>Difficulty</label> <small>What percentage of participants will solve this?</small>
@@ -61,11 +67,15 @@
   <!-- updates preview -->
   <script>
     function update(){
-      var val = $( "#problem" ).val();
-      val = latex_to_HTML(val);
-      $( "#preview" ).html(val);
+      var prob = $( "#problem" ).val();
+      prob = latex_to_HTML(prob);
+      $( "#preview" ).html(prob);
+      var sol = $( "#solution" ).val();
+      sol = latex_to_HTML(sol);
+      $( "#solution-preview" ).html(sol);
       MathJax.Hub.Queue(
-        ["Typeset", MathJax.Hub, preview]
+        ["Typeset", MathJax.Hub, "preview"],
+        ["Typeset", MathJax.Hub, "solution-preview"]
       );
     }
   </script>

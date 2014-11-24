@@ -36,10 +36,21 @@
 .handle { overflow: hidden; }
 
 hr { margin: 6px 0; }
+hr.preview { margin: 0 10px; }
 
 #login {
   max-width: 320px;
   margin-bottom: 30px;
+}
+
+.panel-body {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.placeholder {
+ display: inline-block;
+ width: 20px;
 }
 
 .problem { padding-bottom: 2px; }

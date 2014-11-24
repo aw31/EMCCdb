@@ -28,7 +28,7 @@ def user_required(handler):
     return check_login
 
 PROBLEM_COMMITTEE = ['awei', 'kwei', 'asun1', 'yyao', 'zsong', 'cqian', \
-                     'jhlin', 'zfeng']
+                     'jhlin', 'zfeng', 'ksun']
 
 def problem_committee_required(handler):
     """ Checks if user of current session is in problem committee. """
@@ -46,6 +46,7 @@ class Problem(ndb.Model):
     """ Problem model. """
     problem = ndb.StringProperty(indexed=False)
     answer = ndb.StringProperty(indexed=False)
+    solution = ndb.StringProperty(indexed=False)
     date = ndb.DateTimeProperty(auto_now_add=True)
     tags = ndb.StringProperty(indexed=False, repeated=True)
     used = ndb.BooleanProperty(indexed=True, default=False) # True if deleted. 
@@ -86,11 +87,18 @@ class MainPage(auth.BaseHandler):
         problem = Problem(parent=ndb.Key('Problems', 'default'))
         problem.problem = self.request.get('problem')
         problem.answer = self.request.get('answer')
+        problem.solution = ''
         problem.tags = self.request.get('tags').lower().split()
         problem.difficulty = self.request.get('difficulty')
-        problem.author = self.user_info()['user_id']
+        problem.author = self.user_info()['user_id'].lower()
         problem.comments = ''
         problem.put()
+
+        # Update memcache.
+        problems = memcache.get('problems')
+        if problems:
+            problems.append(problem)
+            memcache.set('problems', problems)
 
 class ViewHandler(auth.BaseHandler):
     """ Handler for viewing submitted problems. """
@@ -101,9 +109,17 @@ class ViewHandler(auth.BaseHandler):
             If nonempty 'deleted' parameter is provided,
             then we return list of soft-deleted problems. """
         used = (self.request.get('deleted') != '')
-        problems = Problem.query(Problem.used == used). \
-                           order(Problem.date). \
-                           fetch(batch_size=300)
+
+        # We keep the list of new problems in memcache to minimize reads.
+        if not used and memcache.get('problems'):
+            problems = memcache.get('problems')
+        else:
+            problems = Problem.query(Problem.used == used). \
+                               order(Problem.date). \
+                               fetch(batch_size=500)
+            if not used:
+                memcache.set('problems', problems)
+
         context = {
             'problems': problems,
             'date': str(datetime.now())
@@ -146,6 +162,7 @@ class EditHandler(auth.BaseHandler):
             self.abort(404)
         problem.problem = self.request.get('problem')
         problem.answer = self.request.get('answer')
+        problem.solution = self.request.get('solution')
         problem.tags = self.request.get('tags').lower().split()
         problem.difficulty = self.request.get('difficulty')
         problem.comments = self.request.get('comments')
@@ -159,6 +176,13 @@ class EditHandler(auth.BaseHandler):
 
         # Set last_write to now in memcache, so we know we need to update. 
         memcache.set('last_write', str(datetime.now()))
+
+        # Update memcache.
+        problems = memcache.get('problems')
+        if problems:
+            problems = [
+                problem if p.key.id() == problem_id else p for p in problems]
+            memcache.set('problems', problems)
 
 class DeleteHandler(auth.BaseHandler):
     """ Handler for problem deletion. """
@@ -176,6 +200,13 @@ class DeleteHandler(auth.BaseHandler):
             self.abort(404)
         problem.used = True
         problem.put()
+
+        # Update memcache.
+        problems = memcache.get('problems')
+        if problems:
+            problems = [p for p in problems if p.key.id() != problem_id]
+            memcache.set('problems', problems)
+
         self.redirect('/')
 
 class ProblemHandler(auth.BaseHandler):
@@ -210,6 +241,7 @@ class ProblemHandler(auth.BaseHandler):
             'id': problem.key.id(),
             'problem': problem.problem, 
             'answer': problem.answer, 
+            'solution': problem.solution,
             'difficulty': problem.difficulty,
             'tags': problem.tags, 
             'author': problem.author, 

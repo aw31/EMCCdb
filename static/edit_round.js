@@ -8,7 +8,7 @@ var id_form = '<form class="add-form problem" id="1">' +
               'placeholder="Problem ID" /></form>';
 var del_open = 'Deleted. <a href="javascript:void(0)" class="undo" id="';
 var del_close = '">Undo?</a>';
-var tag_div_open = '<hr><div class="tags">';
+var tag_div_open = '<div class="tags">';
 var tag_div_close = '</div>';
 var tag_open = '<span class="btn btn-xs disabled tag">';
 var tag_close = '</span>';
@@ -77,16 +77,30 @@ function set(row_id, id, index){
   var row = $('#round-body tr:nth-child(' + row_id + ')');
   $.get('get_problem?problem_id=' + id + index, function(r){
     row.find('.raw').html(r.problem);
-    var div_open = '<div class="problem" id="' + r.id + '">';
-    var div_close = delete_button + '</div>';
-    var prob = div_open + latex_to_HTML(r.problem) + div_close;
+
+    var prob_open = '<div class="problem" id="' + r.id + '">';
+    var prob_close = delete_button + '</div> <hr>';
+    var prob = prob_open + latex_to_HTML(r.problem) + prob_close;
+
+    var show_sol = $('#solution-checkbox').is(':checked');
+    var sol_open = '<div class="solution" id="' + r.id + '-solution"';
+    var sol_close = '</div> <hr class="solution"';
+    if(!show_sol){
+      sol_open += ' hidden';
+      sol_close += ' hidden';
+    }
+    sol_open += '>';
+    sol_close += '>';
+    var sol = sol_open + latex_to_HTML(r.solution) + sol_close;
+
     var tags = ''
     tags += make_tag(r.author);
     tags += make_tag(r.difficulty);
     for(var i = 0; i < r.tags.length; i++){
       tags += make_tag(r.tags[i]);
     }
-    prob += tag_div_open + tags + tag_div_close;
+
+    prob += sol + tag_div_open + tags + tag_div_close;
     row.find('input').attr('disabled', false);
     row.find('input').val('');
     row.find('td:nth-child(2)').html(prob);
@@ -124,6 +138,10 @@ $(document).ready(function(){
     if($(this).attr('id') != '1'){
       $(this).html(latex_to_HTML($(this).html()) + delete_button);
     }
+  });
+
+  $('.solution').each(function(){
+    $(this).html(latex_to_HTML($(this).html()));
   });
 
   $(document).on('mouseenter', 'td', function(){
@@ -198,6 +216,15 @@ $(document).ready(function(){
     // calls save...
     save();
   });
+
+  $('#solution-checkbox').click(function(){
+    // toggles solutions
+    $('.solution').toggle();
+  });
+
+  if($('#solution-checkbox').is(':checked')){
+    $('.solution').show();
+  }
 });
 
 $(window).on('beforeunload', function () {
@@ -212,6 +239,7 @@ function update_problem(id){
   if($('#' + id).length === 0) return;
   $.get('get_problem?problem_id=' + id, function (r) {
     $('#' + id).html(latex_to_HTML(r.problem) + delete_button);
+    $('#' + id + '-solution').html(latex_to_HTML(r.solution));
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     $('#' + id).parent().find('.raw').html(r.problem);
     var tags = ''
@@ -252,4 +280,3 @@ $(window).bind('keydown', function(event) {
     }
   }
 });
-

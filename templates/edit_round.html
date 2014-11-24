@@ -3,7 +3,10 @@
 {% block content %}
   {% include "navbar.html" %}
   <div class="page-header"><h1>{{ round.year }} {{ round.name }}</h1></div>
-  <span>Drag and drop to reorder!</span>
+  <div>Drag and drop to reorder!</div>
+  <span class="checkbox" style="display: inline-block;">
+    <label><input type="checkbox" id="solution-checkbox"/>Show solutions</label>
+  </span>
   <div class="btn-toolbar pull-right round-edit-toolbar">
     <button class="btn" id="tex">to TeX</button>
     <button class="btn" id="pdf">to PDF</button>
@@ -42,6 +45,10 @@
               {{ problem.problem }}
             </div>
             <hr>
+            <div class="solution" id="{{ problem.key.id }}-solution" hidden>
+              {{ problem.solution }}
+            </div>
+            <hr class="solution" hidden>
             <div class="tags">
               <span class="btn btn-xs disabled tag">{{ problem.author }}</span>
               {% if problem.difficulty %}
@@ -75,11 +82,31 @@
 
   <script>
     var round_name = '{{ round.name }}';
+    var round_length = {{ round.length }};
     var round_id = {{ round.key.id }};
     var round_year = '{{ round.year }}';
     var last_update = "{{ date }}";
+
+    // oops, hardcoding...
+    var round_points;
+    var round_time;
+    if(round_name == "Speed"){
+      round_points = 2;
+      round_time = 30;
+    }
+    if(round_name == "Accuracy"){
+      round_points = 5;
+      round_time = 40;
+    }
+    if(round_name == "Team"){
+      round_points = 18;
+      round_time = 45;
+    }
+    if(round_name == "Guts"){
+      round_points = "a varying number of";
+      round_time = 75;
+    }
   </script>
   <script src="static/edit_round.js"></script>
   <script src="static/latex_template.js"></script>
 {% endblock %}
-

@@ -87,7 +87,7 @@ var template_open = " \
 {\\bf \\printdate\\ }\n \
 \\end{flushright}\n \
 \n \
-{\\em \\noindent There are ?? problems, worth ?? points each, to be solved in ?? minutes. Answer each question to the best of your ability. Answers must be simplified and exact unless otherwise specified. There is no penalty for guessing. Be careful and don't rush.}\n \
+{\\em \\noindent There are " + round_length + " problems, worth " + round_points + " points each, to be solved in " + round_time + " minutes. Answer each question to the best of your ability. Answers must be simplified and exact unless otherwise specified. There is no penalty for guessing. Be careful and don't rush.}\n \
 \n \
 \\begin{enumerate}\n";
 

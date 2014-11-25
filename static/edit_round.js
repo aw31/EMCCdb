@@ -58,9 +58,15 @@ function save(){
 function getTeX(){
   // returns round -> TeX
   var output = template_open;
-  $('.raw').each(function(){
-    output += '\\item ' + $(this).html() + '\n';
-  });
+  if($('#solution-checkbox').is(':checked')){
+    $('.raw-sol').each(function(){
+      output += '\\item ' + $(this).html() + '\n';
+    });
+  } else {
+    $('.raw').each(function(){
+      output += '\\item ' + $(this).html() + '\n';
+    });
+  }
   output += template_close;
   return output;
 }
@@ -77,6 +83,7 @@ function set(row_id, id, index){
   var row = $('#round-body tr:nth-child(' + row_id + ')');
   $.get('get_problem?problem_id=' + id + index, function(r){
     row.find('.raw').html(r.problem);
+    row.find('.raw-sol').html(r.problem + '\n\n\\textbf{Solution:}' + r.solution);
 
     var prob_open = '<div class="problem" id="' + r.id + '">';
     var prob_close = delete_button + '</div> <hr>';
@@ -172,6 +179,7 @@ $(document).ready(function(){
     div.attr('id', '1');
     div.parent().html(id_form);
     row.find('.raw').html('');
+    row.find('.raw-sol').html('');
     $('body').addClass('changed');
     addStatus(del_open + row_id + ' ' + id + del_close, 'alert-success', 5000);
   });
@@ -241,7 +249,8 @@ function update_problem(id){
     $('#' + id).html(latex_to_HTML(r.problem) + delete_button);
     $('#' + id + '-solution').html(latex_to_HTML(r.solution));
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-    $('#' + id).parent().find('.raw').html(r.problem);
+    $('#' + id).parent().parent().find('.raw').html(r.problem);
+    $('#' + id).parent().parent().find('.raw-sol').html(r.problem + '\n\n\\textbf{Solution:} ' + r.solution);
     var tags = ''
     tags += make_tag(r.author);
     tags += make_tag(r.difficulty);

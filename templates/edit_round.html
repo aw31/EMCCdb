@@ -35,8 +35,12 @@
           </a>
           {% if problem %}
             <pre class="raw" hidden>{{ problem.problem }}</pre>
+            <pre class="raw-sol" hidden>{{ problem.problem }}
+
+\textbf{Solution:} {{ problem.solution }}</prev>
           {% else %}
             <pre class="raw" hidden></pre>
+            <pre class="raw-sol" hidden></pre>
           {% endif %}
         </td>
         {% if problem %}

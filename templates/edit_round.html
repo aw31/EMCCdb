@@ -22,57 +22,48 @@
     </thead>
     <tbody id="round-body">
       {% for problem in problems %}
-      <tr>
-        <td class="handle">
-          <span class="grip-wrapper">
-            <span class="grip"></span><br>
-            <span class="grip"></span><br>
-            <span class="grip"></span><br>
-            <span class="grip"></span>
-          </span>
-          <a class="prob-link" href="javascript:void(0)">
-            <span class="counter pull-right">{{ forloop.counter }}</span>
-          </a>
+        <tr>
+          <td class="handle">
+            <span class="grip-wrapper">
+              <span class="grip"></span><br>
+              <span class="grip"></span><br>
+              <span class="grip"></span><br>
+              <span class="grip"></span>
+            </span>
+            <a class="prob-link" href="javascript:void(0)">
+              <span class="counter pull-right">{{ forloop.counter }}</span>
+            </a>
+          </td>
           {% if problem %}
-            <pre class="raw" hidden>{{ problem.problem }}</pre>
-            <pre class="raw-sol" hidden>{{ problem.problem }}
-
-\textbf{Solution:} {{ problem.solution }}</prev>
+            <td>
+              <div class="problem" id="{{ problem.key.id }}">
+                {{ problem.problem }}
+              </div>
+              <hr>
+              <div class="solution" id="{{ problem.key.id }}-solution" hidden>
+                {{ problem.solution }}
+              </div>
+              <hr class="solution" hidden>
+              <div class="tags">
+                <span class="btn btn-xs disabled tag">{{ problem.author }}</span>
+                {% if problem.difficulty %}
+                  <span class="btn btn-xs disabled tag">{{ problem.difficulty }}</span>
+                {% else %}
+                  <span class="btn btn-xs disabled tag">?</span>
+                {% endif %}
+                {% for tag in problem.tags %}
+                  <span class="btn btn-xs disabled tag">{{ tag }}</span>
+                {% endfor %}
+              </div>
+            </td>
           {% else %}
-            <pre class="raw" hidden></pre>
-            <pre class="raw-sol" hidden></pre>
+            <td>
+              <form class="add-form problem" id="1">
+                <input type="text" class="form-control" name="id" placeholder="Problem ID" />
+              </form>
+            </td>
           {% endif %}
-        </td>
-        {% if problem %}
-          <td>
-            <div class="problem" id="{{ problem.key.id }}">
-              {{ problem.problem }}
-            </div>
-            <hr>
-            <div class="solution" id="{{ problem.key.id }}-solution" hidden>
-              {{ problem.solution }}
-            </div>
-            <hr class="solution" hidden>
-            <div class="tags">
-              <span class="btn btn-xs disabled tag">{{ problem.author }}</span>
-              {% if problem.difficulty %}
-                <span class="btn btn-xs disabled tag">{{ problem.difficulty }}</span>
-              {% else %}
-                <span class="btn btn-xs disabled tag">?</span>
-              {% endif %}
-              {% for tag in problem.tags %}
-                <span class="btn btn-xs disabled tag">{{ tag }}</span>
-              {% endfor %}
-            </div>
-          </td>
-        {% else %}
-          <td>
-            <form class="add-form problem" id="1">
-              <input type="text" class="form-control" name="id" placeholder="Problem ID" />
-            </form>
-          </td>
-        {% endif %}
-      </tr>
+        </tr>
       {% endfor %}
     </tbody>
   </table>

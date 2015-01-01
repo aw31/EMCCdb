@@ -39,7 +39,7 @@
 <script>
 // sketchy hack :O
 // maps problem ids to indices (used in view.js)
-id_map = new Object();
+var id_map = new Object();
 {% for problem in problems %}id_map[{{ problem.key.id }}]={{ forloop.counter }};{% endfor %}
 </script>
 {% endblock %}

@@ -1,25 +1,37 @@
 'use strict';
 
-var delete_button = ' <button class="btn btn-xs btn-secondary delete">' +
+// formatting code from http://stackoverflow.com/a/4673436/3376090
+if (!String.format) {
+  String.format = function(format) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    return format.replace(/{%(\d+)}/g, function(match, number) { 
+      return typeof args[number] != 'undefined' ? args[number] : match;
+    });
+  };
+}
+
+var del_button = ' <button class="btn btn-xs btn-secondary delete">' +
                     '<span class="glyphicon glyphicon-remove"></span></button>' +
                     '<span>&zwnj;</span><span class="placeholder"></span>';
 var id_form = '<form class="add-form problem" id="1">' +
-              '<input type="text" class="form-control" name="id" ' + 
+              '<input type="text" class="form-control" name="id" ' +
               'placeholder="Problem ID" /></form>';
-var del_open = 'Deleted. <a href="javascript:void(0)" class="undo" id="';
-var del_close = '">Undo?</a>';
-var tag_div_open = '<div class="tags">';
-var tag_div_close = '</div>';
-var tag_open = '<span class="btn btn-xs disabled tag">';
-var tag_close = '</span>';
+var del_alert = 'Deleted. <a href="#" class="undo" id="{%0}">Undo?</a>';
+var tag_div = '<div class="tags">{%0}</div>';
+var tag = '<span class="btn btn-xs disabled tag">{%0}</span>';
+var problem = '<div class="problem" id="{%0}">{%1}' + del_button +
+              '</div><hr>';
+var solution = '<div class="solution" id="{%0}-solution"{%2}>{%1}</div>' +
+               '<hr class="solution"{%2}>';
+
+var problems = new Object();
 
 function renumber(){
   // renumbers problems during dragging
   var i = 0, drag_i;
   $('#round-body tr').each(function(){
     if(!$(this).hasClass('dragged')){
-      i++;
-      $(this).find('.counter').first().html(i);
+      $(this).find('.counter').first().html(++i);
     }
     if($(this).hasClass('placeholder')){
       drag_i = i;
@@ -34,15 +46,15 @@ function renumber(){
 
 function save(){
   // saves round
-  var problems = [];
+  var problem_ids = [];
   $('.problem').each(function(){
-    problems.push($(this).attr('id'));
+    problem_ids.push($(this).attr('id'));
   });
   $.ajax({
     type: 'POST',
     url: '/edit_round',
     data: {
-      problems: JSON.stringify(problems),
+      problem_ids: JSON.stringify(problem_ids),
       round_id: round_id
     },
     success: function(){
@@ -57,24 +69,27 @@ function save(){
 
 function getTeX(){
   // returns round -> TeX
-  var output = template_open;
-  if($('#solution-checkbox').is(':checked')){
-    $('.raw-sol').each(function(){
-      output += '\\item ' + $(this).html() + '\n';
-    });
-  } else {
-    $('.raw').each(function(){
-      output += '\\item ' + $(this).html() + '\n';
-    });
+  var output = '% ' + round_name + ' Problems\n\n';
+  for(var i = 1; i <= round_length; i++){
+    var prob = problems[i];
+    if(prob){
+      output += '% ' + problems[i].author + '\n';
+      output += '\\problem{' + prob.problem + '}\n';
+      output += '\\solution{' + prob.answer + '}{' + prob.solution + '}\n';
+    } else {
+      output += '% \n';
+      output += '\\problem{???} \n'
+      output += '\\solution{???}{???} \n'
+    }
+    output += '\n';
   }
-  output += template_close;
   return output;
 }
 
-function make_tag(tag){
-  // returns a tag element containing 'tag'
-  if(tag.length === 0) return tag_open + '?' + tag_close;
-  return tag_open + tag + tag_close;
+function make_tag(val){
+  // returns a tag element containing 'val'
+  if(val.length === 0) return String.format(tag, '?');
+  return String.format(tag, val);
 }
 
 function set(row_id, id, index){
@@ -82,23 +97,11 @@ function set(row_id, id, index){
   // index determines whether we use short or long id
   var row = $('#round-body tr:nth-child(' + row_id + ')');
   $.get('get_problem?problem_id=' + id + index, function(r){
-    row.find('.raw').html(r.problem);
-    row.find('.raw-sol').html(r.problem + '\n\n\\textbf{Solution:}' + r.solution);
+    problems[row_id] = r;
 
-    var prob_open = '<div class="problem" id="' + r.id + '">';
-    var prob_close = delete_button + '</div> <hr>';
-    var prob = prob_open + latex_to_HTML(r.problem) + prob_close;
-
-    var show_sol = $('#solution-checkbox').is(':checked');
-    var sol_open = '<div class="solution" id="' + r.id + '-solution"';
-    var sol_close = '</div> <hr class="solution"';
-    if(!show_sol){
-      sol_open += ' hidden';
-      sol_close += ' hidden';
-    }
-    sol_open += '>';
-    sol_close += '>';
-    var sol = sol_open + latex_to_HTML(r.solution) + sol_close;
+    var prob = String.format(problem, r.id, latex_to_HTML(r.problem));
+    var hidden = ($('#solution-checkbox').is(':checked') ? '' : ' hidden');
+    var sol = String.format(solution, r.id, latex_to_HTML(r.solution), ' hidden');
 
     var tags = ''
     tags += make_tag(r.author);
@@ -106,15 +109,13 @@ function set(row_id, id, index){
     for(var i = 0; i < r.tags.length; i++){
       tags += make_tag(r.tags[i]);
     }
+    tags = String.format(tag_div, tags);
 
-    prob += sol + tag_div_open + tags + tag_div_close;
     row.find('input').attr('disabled', false);
     row.find('input').val('');
-    row.find('td:nth-child(2)').html(prob);
+    row.find('td:nth-child(2)').html(prob + sol + tags);
     $('body').addClass('changed');
-    MathJax.Hub.Queue(
-      ["Typeset", MathJax.Hub]
-    );
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
   }).fail(function(){
     addStatus('Oops, the ID is invalid.', 'alert-danger');
     row.find('input').attr('disabled', false);
@@ -141,9 +142,10 @@ $(document).ready(function(){
   });
 
   $('.problem').each(function(){
-    // adds delete button to each problem
+    // adds delete button to each problem and inserts into Object problems
     if($(this).attr('id') != '1'){
-      $(this).html(latex_to_HTML($(this).html()) + delete_button);
+      $(this).html(latex_to_HTML($(this).html()) + del_button);
+      update_problem($(this).attr('id'));
     }
   });
 
@@ -165,7 +167,7 @@ $(document).ready(function(){
 
   $(document).on('click', '.undo', function(){
     // calls undo, fades delete status
-    var params = $(this).attr('id').split(' ');
+    var params = $(this).attr('id').split('-');
     $(this).parent().parent().delay(500).fadeOut('slow');
     undo(params[0], params[1]);
   });
@@ -178,10 +180,9 @@ $(document).ready(function(){
     var row_id = row.find('.counter').html();
     div.attr('id', '1');
     div.parent().html(id_form);
-    row.find('.raw').html('');
-    row.find('.raw-sol').html('');
+    delete problems[row_id];
     $('body').addClass('changed');
-    addStatus(del_open + row_id + ' ' + id + del_close, 'alert-success', 5000);
+    addStatus(String.format(del_alert, row_id + '-' + id), 'alert-success', 5000);
   });
 
   $(document).on('click', '.prob-link', function(e){
@@ -246,11 +247,9 @@ function update_problem(id){
   // update problem with given id
   if($('#' + id).length === 0) return;
   $.get('get_problem?problem_id=' + id, function (r) {
-    $('#' + id).html(latex_to_HTML(r.problem) + delete_button);
+    $('#' + id).html(latex_to_HTML(r.problem) + del_button);
     $('#' + id + '-solution').html(latex_to_HTML(r.solution));
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-    $('#' + id).parent().parent().find('.raw').html(r.problem);
-    $('#' + id).parent().parent().find('.raw-sol').html(r.problem + '\n\n\\textbf{Solution:} ' + r.solution);
     var tags = ''
     tags += make_tag(r.author);
     tags += make_tag(r.difficulty);
@@ -258,17 +257,18 @@ function update_problem(id){
       tags += make_tag(r.tags[i]);
     }
     $('#' + id).parent().find('.tags').html(tags);
+
+    var row = $('#' + id).parent().parent();
+    var row_id = row.find('.counter').html();
+    problems[row_id] = r;
   });
 }
 
 function update() {
   // gets and updates recently changed problems
   $.get('get_changes?date=' + last_update, function (r) {
-    if(r.date){
-      last_update = r.date;
-    }
+    if(r.date) last_update = r.date;
     var ids = r.ids;
-
     if(ids === 'undefined') return;
     for (var i = 0; i < ids.length; i++) {
       update_problem(ids[i]);

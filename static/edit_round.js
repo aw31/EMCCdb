@@ -54,7 +54,7 @@ function save(){
     type: 'POST',
     url: '/edit_round',
     data: {
-      problem_ids: JSON.stringify(problem_ids),
+      problems: JSON.stringify(problem_ids),
       round_id: round_id
     },
     success: function(){
@@ -71,9 +71,11 @@ function getTeX(){
   // returns round -> TeX
   var output = '% ' + round_name + ' Problems\n\n';
   for(var i = 1; i <= round_length; i++){
-    var prob = problems[i];
+    var row = $('#round-body tr:nth-child(' + i + ')');
+    var id = row.find('.problem').attr('id');
+    var prob = problems[id];
     if(prob){
-      output += '% ' + problems[i].author + '\n';
+      output += '% ' + prob.author + '\n';
       output += '\\problem{' + prob.problem + '}\n';
       output += '\\solution{' + prob.answer + '}{' + prob.solution + '}\n';
     } else {
@@ -97,7 +99,7 @@ function set(row_id, id, index){
   // index determines whether we use short or long id
   var row = $('#round-body tr:nth-child(' + row_id + ')');
   $.get('get_problem?problem_id=' + id + index, function(r){
-    problems[row_id] = r;
+    problems[r.id] = r;
 
     var prob = String.format(problem, r.id, latex_to_HTML(r.problem));
     var hidden = ($('#solution-checkbox').is(':checked') ? '' : ' hidden');
@@ -180,7 +182,7 @@ $(document).ready(function(){
     var row_id = row.find('.counter').html();
     div.attr('id', '1');
     div.parent().html(id_form);
-    delete problems[row_id];
+    delete problems[id];
     $('body').addClass('changed');
     addStatus(String.format(del_alert, row_id + '-' + id), 'alert-success', 5000);
   });
@@ -257,10 +259,7 @@ function update_problem(id){
       tags += make_tag(r.tags[i]);
     }
     $('#' + id).parent().find('.tags').html(tags);
-
-    var row = $('#' + id).parent().parent();
-    var row_id = row.find('.counter').html();
-    problems[row_id] = r;
+    problems[r.id] = r;
   });
 }
 

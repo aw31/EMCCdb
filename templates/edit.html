@@ -69,10 +69,10 @@
     function update(){
       var prob = $( "#problem" ).val();
       prob = latex_to_HTML(prob);
-      $( "#preview" ).html(prob);
+      $( "#preview" ).text(prob).html();
       var sol = $( "#solution" ).val();
       sol = latex_to_HTML(sol);
-      $( "#solution-preview" ).html(sol);
+      $( "#solution-preview" ).text(sol).html();
       MathJax.Hub.Queue(
         ["Typeset", MathJax.Hub, "preview"],
         ["Typeset", MathJax.Hub, "solution-preview"]

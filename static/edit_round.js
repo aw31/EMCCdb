@@ -101,9 +101,9 @@ function set(row_id, id, index){
   $.get('get_problem?problem_id=' + id + index, function(r){
     problems[r.id] = r;
 
-    var prob = String.format(problem, r.id, latex_to_HTML(r.problem));
+    var prob = String.format(problem, r.id, latex_to_HTML(r.problem_clean));
     var hidden = ($('#solution-checkbox').is(':checked') ? '' : ' hidden');
-    var sol = String.format(solution, r.id, latex_to_HTML(r.solution), ' hidden');
+    var sol = String.format(solution, r.id, latex_to_HTML(r.solution_clean), ' hidden');
 
     var tags = ''
     tags += make_tag(r.author);
@@ -249,8 +249,8 @@ function update_problem(id){
   // update problem with given id
   if($('#' + id).length === 0) return;
   $.get('get_problem?problem_id=' + id, function (r) {
-    $('#' + id).html(latex_to_HTML(r.problem) + del_button);
-    $('#' + id + '-solution').html(latex_to_HTML(r.solution));
+    $('#' + id).html(latex_to_HTML(r.problem_clean) + del_button);
+    $('#' + id + '-solution').html(latex_to_HTML(r.solution_clean));
     MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
     var tags = ''
     tags += make_tag(r.author);

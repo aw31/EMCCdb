@@ -240,9 +240,12 @@ class ProblemHandler(auth.BaseHandler):
         self.response.headers['Content-Type'] = 'application/json'
         resp = {
             'id': problem.key.id(),
-            'problem': cgi.escape(problem.problem),
+            'problem': problem.problem,
+            'problem_clean': cgi.escape(problem.problem),
             'answer': problem.answer,
+            'answer_clean': cgi.escape(problem.answer),
             'solution': problem.solution,
+            'solution_clean': cgi.escape(problem.solution),
             'difficulty': problem.difficulty,
             'tags': problem.tags,
             'author': problem.author,

@@ -160,8 +160,8 @@ function update_problem(id) {
 
     var prob = table.cell(index - 1, 1).data();
     var $prob = $(prob);
-    $($prob[0]).html(latex_to_HTML(r['problem']));
-    $prob.find('.ans').html('<strong>Answer</strong>: ' + r['answer']);
+    $($prob[0]).html(latex_to_HTML(r['problem_clean']));
+    $prob.find('.ans').html('<strong>Answer</strong>: ' + r['answer_clean']);
     var prob_data = $('<div>').append($prob.clone()).html();
     table.cell(index - 1, 1).data(prob_data);
 

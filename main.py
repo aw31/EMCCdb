@@ -3,6 +3,7 @@
 import webapp2
 import ast
 import json
+import cgi
 from datetime import datetime
 from urlparse import urlsplit
 
@@ -239,12 +240,12 @@ class ProblemHandler(auth.BaseHandler):
         self.response.headers['Content-Type'] = 'application/json'
         resp = {
             'id': problem.key.id(),
-            'problem': problem.problem, 
-            'answer': problem.answer, 
+            'problem': cgi.escape(problem.problem),
+            'answer': problem.answer,
             'solution': problem.solution,
             'difficulty': problem.difficulty,
-            'tags': problem.tags, 
-            'author': problem.author, 
+            'tags': problem.tags,
+            'author': problem.author,
             'comments': problem.comments
         }
         self.response.out.write(json.dumps(resp))

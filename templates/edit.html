@@ -66,13 +66,17 @@
 
   <!-- updates preview -->
   <script>
+    function escape(str){
+      return $('<div/>').text(str).html();
+    }
+
     function update(){
       var prob = $( "#problem" ).val();
-      prob = latex_to_HTML(prob);
-      $( "#preview" ).text(prob).html();
+      prob = latex_to_HTML(escape(prob));
+      $( "#preview" ).html(prob);
       var sol = $( "#solution" ).val();
-      sol = latex_to_HTML(sol);
-      $( "#solution-preview" ).text(sol).html();
+      sol = latex_to_HTML(escape(sol));
+      $( "#solution-preview" ).html(sol);
       MathJax.Hub.Queue(
         ["Typeset", MathJax.Hub, "preview"],
         ["Typeset", MathJax.Hub, "solution-preview"]

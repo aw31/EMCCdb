@@ -2,7 +2,7 @@
 // this assumes that the user does not randomly throw around '{' and '}'
 // TODO: write something more robust
 function latex_to_HTML(str){
-  str = str.split('\\\\').join('<br>');
+  str = str.split('\n\n').join('<br>');
   str = str.split('\\{').join('\uFFFC');
   str = str.split('\\}').join('\uFFFD');
 
